@@ -7,34 +7,34 @@ def _ceildiv(a, b):
 def _strides_for_shape(shape):
 	strides = []
 	stride_product = 1
-	for d in shape:
+	for s in shape:
 		strides.append(stride_product)
-		stride_product *= d
+		stride_product *= s
 	strides.reverse()
-	return strides
+	return tuple(strides)
 
 def _size_for_shape(shape):
 	stride_product = 1
-	for d in shape:
-		stride_product *= d
+	for s in shape:
+		stride_product *= s
 	return stride_product
 
 def _shape_from_object(obj):
 	shape = []
 
-	def _shape_from_object_r(index, element, depth):
+	def _shape_from_object_r(index, element, axis):
 		try:
 			for i, e in enumerate(element):
-				_shape_from_object_r(i, e, depth+1)
-			while len(shape) <= depth:
+				_shape_from_object_r(i, e, axis+1)
+			while len(shape) <= axis:
 				shape.append(0)
-			shape[depth] = max(shape[depth], i+1)
+			shape[axis] = max(shape[axis], i+1)
 		except TypeError:
 			pass
 
 	_shape_from_object_r(0, obj, 0)
 
-	return shape
+	return tuple(shape)
 
 def _assign_from_object(array, obj):
 	key = []
@@ -51,13 +51,13 @@ def _assign_from_object(array, obj):
 	_assign_from_object_r(obj)
 
 def _increment_mutable_key(key, shape):
-	for depth in reversed(xrange(len(shape))):
-		key[depth] += 1
-		if key[depth] < shape[depth]:
+	for axis in reversed(xrange(len(shape))):
+		key[axis] += 1
+		if key[axis] < shape[axis]:
 			return True
-		if depth == 0:
+		if axis == 0:
 			return False
-		key[depth] = 0
+		key[axis] = 0
 
 def _key_for_index(index, shape):
 	key = []
@@ -130,34 +130,43 @@ class ndarray:
 
 	def __getitem__(self, key):
 		# Indexing spec is located at:
-		# http://docs.scipy.org/doc/numpy/reference/arrays.indexing.html#arrays-indexing
+		# http://docs.scipy.org/doc/numpy/reference/arrays.indexing.html
 
 		# Promote to tuple.
 		if not isinstance(key, tuple):
 			key = (key,)
 
-		# Convert the key to slices and return a new array view.
-		slice_key = []
+		axis = 0
+		shape = []
+		strides = []
+		offset = self.offset
+
 		for k in key:
-			if isinstance(k, slice):
-				slice_key.append(k)
-			elif isinstance(k, int):
-				slice_key.append(slice(k, k+1, 1))
+			if isinstance(k, int):
+				offset += k * self.strides[axis]
+				axis += 1
+			elif isinstance(k, slice):
+				start, stop, step = k.indices(self.shape[axis])
+				shape.append(_ceildiv(stop - start, step))
+				strides.append(step * self.strides[axis])
+				offset += start * self.strides[axis]
+				axis += 1
+			elif k is Ellipsis:
+				raise(TypeError, "ellipsis are not supported.")
+			elif k is None:
+				shape.append(1)
+				strides.append(0)
 			else:
 				raise(TypeError, "key elements must be instaces of int or slice.")
 
-		# Fill in missing axes with their full range.
-		while len(slice_key) < len(self.shape):
-			slice_key.append(slice(0, self.shape[len(slice_key)], 1))
+		shape.extend(self.shape[axis:])
+		strides.extend(self.strides[axis:])
 
-		# Calculate new offset, shape & strides from the slices.
-		indices = _slice_indices_for_slice_key(slice_key, self.shape)
+		if len(shape) == 0:
+			shape = [1]
+			strides = [0]
 
-		offset = _offset_for_key([i[0] for i in indices], self.strides)
-		shape = [_ceildiv(i[1] - i[0], i[2]) for i in indices]
-		strides = [self.strides[i_index] * i[2] for i_index, i in enumerate(indices)]
-
-		return ndarray(shape, self.data, offset, strides, self, self.typecode)
+		return ndarray(tuple(shape), self.data, offset, tuple(strides), self, self.typecode)
 
 	def __setitem__(self, key, value):
 		offset = _offset_for_key(key, self.strides)
@@ -173,17 +182,13 @@ class ndarray:
 		def _repr_r(s, axis, offset):
 			if axis < len(self.shape):
 				s += '\n' + ('\t' * axis) + '['
-
 				for k_index, k in enumerate(xrange(self.shape[axis])):
 					s = _repr_r(s, axis+1, offset + k * self.strides[axis])
 					if k_index < self.shape[axis] - 1:
 						s += ', '
-
 				s += ']'
-
 			else:
-				s += repr(self.data[offset]).rstrip('0')
-				#s += repr(self.data[offset])
+				s += repr(self.data[offset])
 			return s
 
 		s = 'array('
@@ -191,6 +196,8 @@ class ndarray:
 		s += ')'
 
 		return s
+
+newaxis = None
 
 def array(obj):
 	s = _shape_from_object(obj)
