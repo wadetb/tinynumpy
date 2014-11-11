@@ -54,7 +54,7 @@ class TestNDIter(unittest.TestCase):
 
 class TestFunctions(unittest.TestCase):
 	def setUp(self):
-		a = [
+		a0 = [
 				[
 					[
 						1, 
@@ -68,14 +68,40 @@ class TestFunctions(unittest.TestCase):
 				[3, 3],
 				[3, 3]
 			]
-		self.t0 = tinyndarray.array(a)
+		self.t0 = tinyndarray.array(a0)
+
+		a1 = [[1,2],[3,4]]
+		self.t1 = tinyndarray.array(a1)
 
 	def test_array(self):
-		# NumPy requires that the input array be full in all dimensions.
+		# NumPy requires that the input array be full in all dimensions, so don't check compatibility.
 		self.assertEqual(self.t0.shape, (4, 4, 4, 4))
 
 	def test_zeros(self):
 		pass
+
+	def test_sum(self):
+		self.assertEqual(self.t1.sum(), 10)
+
+	def test_max(self):
+		self.assertEqual(self.t1.max(), 4)
+
+	def test_min(self):
+		self.assertEqual(self.t1.min(), 1)
+
+	def test_fill(self):
+		t = tinyndarray.zeros((4, 4, 4))
+		t.fill(1)
+		self.assertEqual(t.sum(), 4*4*4)
+
+	def test_copy(self):
+		t = self.t1.copy()
+		t[0,0] = 0
+		self.assertEqual(self.t1.sum(), 10)
+		self.assertEqual(t.sum(), 9)
+
+	def test_flatten(self):
+		self.assertEqual(_clean_repr(self.t1.flatten()), _clean_repr(tinyndarray.array([1, 2, 3, 4])))
 
 if __name__ == '__main__':
     unittest.main()

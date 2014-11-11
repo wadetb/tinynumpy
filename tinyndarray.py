@@ -28,12 +28,14 @@ def _shape_from_object(obj):
 				_shape_from_object_r(i, e, axis+1)
 			while len(shape) <= axis:
 				shape.append(0)
-			shape[axis] = max(shape[axis], i+1)
+			l = i + 1
+			s = shape[axis]
+			if l > s:
+				shape[axis] = l
 		except TypeError:
 			pass
 
 	_shape_from_object_r(0, obj, 0)
-
 	return tuple(shape)
 
 def _assign_from_object(array, obj):
@@ -74,13 +76,6 @@ def _offset_for_key(key, strides):
 		offset += strides[k_index] * k
 	return offset
 
-def _slice_indices_for_slice_key(slice_key, shape):
-	indices = []
-	for k_index, k in enumerate(slice_key):
-		s = shape[k_index]
-		indices.append(k.indices(s))
-	return indices
-
 class nditer:
 	def __init__(self, array):
 		self.array = array
@@ -96,6 +91,10 @@ class nditer:
 		key = _key_for_index(index, self.array.shape)
 		return self.array[key]
 
+	def __setitem__(self, index, value):
+		key = _key_for_index(index, self.array.shape)
+		self.array[key] = value
+
 	def __next__(self):
 		if self.key is None:
 			raise StopIteration
@@ -108,7 +107,7 @@ class nditer:
 		return self.__next__()
 
 class ndarray:
-	def __init__(self, shape, buffer=None, offset=0, strides=None, base=None, typecode='f'):
+	def __init__(self, shape, offset=0, strides=None, typecode='f', base=None):
 		self.shape = shape
 		self.offset = offset
 
@@ -118,13 +117,13 @@ class ndarray:
 			self.strides = _strides_for_shape(shape)
 
 		self.ndim = len(shape)
-		self.size = self.strides[0] * self.shape[0]
+		self.size = _size_for_shape(shape)
 
-		self.base = base
 		self.typecode = typecode
 
-		if buffer:
-			self.data = buffer
+		self.base = base
+		if base:
+			self.data = base.data
 		else:
 			self.data = dataarray.array(typecode, [0] * self.size)
 
@@ -166,7 +165,7 @@ class ndarray:
 			shape = [1]
 			strides = [0]
 
-		return ndarray(tuple(shape), self.data, offset, tuple(strides), self, self.typecode)
+		return ndarray(tuple(shape), offset, tuple(strides), self.typecode, self)
 
 	def __setitem__(self, key, value):
 		offset = _offset_for_key(key, self.strides)
@@ -197,13 +196,77 @@ class ndarray:
 
 		return s
 
+	def copy(self):
+		a = empty(self.shape)
+		self_iter = nditer(self)
+		a_iter = nditer(a)
+		for i in xrange(self.size):
+			a_iter[i] = self_iter[i]
+		return a
+
+	def flatten(self):
+		a = empty((self.size,))
+		for i_index, i in enumerate(nditer(self)):
+			a[i_index,] = float(i)
+		return a
+
+	def fill(self, value):
+		fill(self, value)
+
+	def max(self, axis=None):
+		return max(self, axis)
+
+	def min(self, axis=None):
+		return min(self, axis)
+
+	def sum(self, axis=None):
+		return sum(self, axis)
+
+def fill(a, value):
+	for i in nditer(a):
+		i[0,] = value
+
+def max(a, axis=None):
+	if axis:
+		raise (TypeError, "axis argument is not supported")
+	else:
+		r = float(nditer(a)[0])
+		for i in nditer(a):
+			v = float(i)
+			if v > r:
+				r = v
+		return r
+
+def min(a, axis=None):
+	if axis:
+		raise (TypeError, "axis argument is not supported")
+	else:
+		r = float(nditer(a)[0])
+		for i in nditer(a):
+			v = float(i)
+			if v < r:
+				r = v
+		return r
+
+def sum(a, axis=None):
+	if axis:
+		raise (TypeError, "axis argument is not supported")
+	else:
+		s = 0.0
+		for i in nditer(a):
+			s += float(i)
+		return s
+
 newaxis = None
 
 def array(obj):
-	s = _shape_from_object(obj)
-	a = ndarray(s)
+	shape = _shape_from_object(obj)
+	a = ndarray(shape)
 	_assign_from_object(a, obj)
 	return a
 
 def zeros(shape):
+	return ndarray(shape)
+
+def empty(shape):
 	return ndarray(shape)
