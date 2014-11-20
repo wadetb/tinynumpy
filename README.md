@@ -1,40 +1,73 @@
-tinynnumpy
-==========
+tinynumpy
+=========
 
-Minimal, pure Python reimplementation of the NumPy N-dimensional array class.
+A lightweight, pure Python, numpy compliant ndarray class.
 
-This was an attempt to emulate the NumPy ndarray slicing behavior, built on top of a flat array of floating point data, which I found fascinating.
+This module is intended to allow libraries that depend on numpy, but
+do not make much use of array processing, to make numpy an optional
+dependency. This might make such libaries better available, also on
+platforms like Pypy and Jython.
 
-I'm also planning to use it in my Advanced CSV Sublime Text plugin as a fallback in case NumPy isn't installed.  (It's obviously way over-engineered for that purpose)
+Features
+--------
 
-# Basic usage
+* The ndarray class has almost all the same properties as the numpy
+  ndarray class.
+* Pretty good compliance with numpy in terms of behavior (such as views).
+* Can be converted to a numpy array (whith shared memory).
+* Can get views of real numpy arrays (with shared memory).
+* Support for wrapping ctypes arrays, or provide ctypes pointer to data.
+* Pretty fast for being pure Python.
+* Works on Python 2.5+, Python 3.x, Pypy and Jython.
 
-```python
-> import tinyndarray
-> m = array([[1,2],[3,4]])
-> m
-array(
-[
-	[1.0, 2.0], 
-	[3.0, 4.0]])
-```
+Caveats
+-------
 
-# Basic slicing
+* ndarray.flat iterator cannot be indexed (it is a generator).
+* ndarray.flags is not supported (but might be soon).
+* No support for Fortran order.
+* Support for data types limited to uin8, uint16, uint32, uint64, int8,
+  int16, int32, int64, float32, float64.
+* Functions that calculate statistics on the data are much slower, since.
+  the iteration takes place in Python.
+* Assigning via slicing is usually pretty fast, but can be slow if the
+  striding is unfortunate.
 
-```python
-> m[1:2,0:2]
-array(
-[
-	[3.0, 4.0]])
-```
 
-# Slicing with step
-
-```python
-> m = array([[1,2,3,4],[5,6,7,8],[9,10,11,12],[13,14,15,16]])
-> m[1::2,::3]
-array(
-[
-	[5.0, 8.0], 
-	[13.0, 16.0]])
-```
+Examples
+--------
+    
+    >>> import tinynumpy as tnp
+    
+    >>> a = tnp.array([[1, 2, 3, 4],[5, 6, 7, 8]])
+    
+    >>> a
+    array([[ 1.,  2.,  3.,  4.], 
+        [ 5.,  6.,  7.,  8.]], dtype='float64')
+    
+    >>> a[:, 2:]
+    array([[ 3.,  4.], 
+        [ 7.,  8.]], dtype='float64')
+    
+    >>> a[:, ::2]
+    array([[ 1.,  3.], 
+        [ 5.,  7.]], dtype='float64')
+    
+    >>> a.shape
+    (2, 4)
+    
+    >>> a.shape = 4, 2
+    
+    >>> a
+    array([[ 1.,  2.], 
+        [ 3.,  4.], 
+        [ 5.,  6.], 
+        [ 7.,  8.]], dtype='float64')
+    
+    >>> b = a.ravel()
+    
+    >>> a[0, 0] = 100
+    
+    >>> b
+    array([ 100.,  2.,  3.,  4.,  5.,  6.,  7.,  8.], dtype='float64')
+    # This last one does not yet work, but it will soon

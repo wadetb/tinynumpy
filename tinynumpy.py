@@ -23,36 +23,7 @@
 # THE SOFTWARE.
 
 """ 
-A lightweight, pure Python, numpy compliant ndarray class.
-
-This module is intended to allow libraries that depend on numpy, but
-do not make much use of array processing, to make numpy an optional
-dependency. This might make such libaries better available, also on
-platforms like Pypy and Jython.
-
-Features:
-
-* The ndarray class has almost all the same properties as the numpy
-  ndarray class.
-* Pretty good compliance with numpy in terms of behavior (such as views).
-* Can be converted to a numpy array (whith shared memory).
-* Can get views of real numpy arrays (with shared memory).
-* Support for wrapping ctypes arrays, or provide ctypes pointer to data.
-* Pretty fast for being pure Python.
-* Works on Python 2.5+, Python 3.x, Pypy and Jython.
-
-Caveats:
-
-* ndarray.flat iterator cannot be indexed (it is a generator).
-* ndarray.flags is not supported (but might be soon).
-* No support for Fortran order.
-* Support for data types limited to uin8, uint16, uint32, uint64, int8,
-  int16, int32, int64, float32, float64.
-* Functions that calculate statistics on the data are much slower, since.
-  the iteration takes place in Python.
-* Assigning via slicing is usually pretty fast, but can be slow if the
-  striding is unfortunate.
-
+A lightweight, pure Python, numpy compliant ndarray class
 """
 
 # todo: ndarray.T (should be pretty efficient)
