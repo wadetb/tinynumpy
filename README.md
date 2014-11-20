@@ -36,38 +36,41 @@ Caveats
 
 Examples
 --------
-    
-    >>> import tinynumpy as tnp
-    
-    >>> a = tnp.array([[1, 2, 3, 4],[5, 6, 7, 8]])
-    
-    >>> a
-    array([[ 1.,  2.,  3.,  4.], 
-        [ 5.,  6.,  7.,  8.]], dtype='float64')
-    
-    >>> a[:, 2:]
-    array([[ 3.,  4.], 
-        [ 7.,  8.]], dtype='float64')
-    
-    >>> a[:, ::2]
-    array([[ 1.,  3.], 
-        [ 5.,  7.]], dtype='float64')
-    
-    >>> a.shape
-    (2, 4)
-    
-    >>> a.shape = 4, 2
-    
-    >>> a
-    array([[ 1.,  2.], 
-        [ 3.,  4.], 
-        [ 5.,  6.], 
-        [ 7.,  8.]], dtype='float64')
-    
-    >>> b = a.ravel()
-    
-    >>> a[0, 0] = 100
-    
-    >>> b
-    array([ 100.,  2.,  3.,  4.,  5.,  6.,  7.,  8.], dtype='float64')
-    # This last one does not yet work, but it will soon
+
+```python
+
+>>> import tinynumpy as tnp
+
+>>> a = tnp.array([[1, 2, 3, 4],[5, 6, 7, 8]])
+
+>>> a
+array([[ 1.,  2.,  3.,  4.], 
+    [ 5.,  6.,  7.,  8.]], dtype='float64')
+
+>>> a[:, 2:]
+array([[ 3.,  4.], 
+    [ 7.,  8.]], dtype='float64')
+
+>>> a[:, ::2]
+array([[ 1.,  3.], 
+    [ 5.,  7.]], dtype='float64')
+
+>>> a.shape
+(2, 4)
+
+>>> a.shape = 4, 2
+
+>>> a
+array([[ 1.,  2.], 
+    [ 3.,  4.], 
+    [ 5.,  6.], 
+    [ 7.,  8.]], dtype='float64')
+
+>>> b = a.ravel()
+
+>>> a[0, 0] = 100
+
+>>> b
+array([ 100.,  2.,  3.,  4.,  5.,  6.,  7.,  8.], dtype='float64')
+# This last one does not yet work, but it will soon
+```
