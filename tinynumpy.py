@@ -23,7 +23,13 @@
 # THE SOFTWARE.
 
 """ 
-A lightweight, pure Python, numpy compliant ndarray class
+A lightweight, pure Python, numpy compliant ndarray class.
+
+The documenation in this module is kept compact. For details on each
+function, see the corresponding documentation at:
+http://docs.scipy.org/doc/numpy/reference/index.html
+Be aware that the behavior of tinynumpy may deviate in some ways from
+numpy, or that certain features may not be supported.
 """
 
 # todo: ndarray.T (should be pretty efficient)
@@ -37,8 +43,12 @@ A lightweight, pure Python, numpy compliant ndarray class
 import sys
 import ctypes
 
+# Python 2/3 compat
 if sys.version_info >= (3, ):
     xrange = range
+
+# Define version numer
+__version__ = '0.0.1dev'
 
 # Define dtypes: struct name, short name, numpy name, ctypes type
 _dtypes = [('b', 'i1', 'int8', ctypes.c_int8),
@@ -176,6 +186,12 @@ def _zerositer(n):
 
 
 def array(obj, dtype=None, copy=True, order=None):
+    """ array(obj, dtype=None, copy=True, order=None)
+    
+    Create a new array. If obj is an ndarray, and copy=False, a view
+    of that array is returned. For details see:
+    http://docs.scipy.org/doc/numpy/reference/generated/numpy.array.html
+    """
     dtype = _convert_dtype(dtype)
     
     if hasattr(obj, '__array_interface__'):
@@ -209,20 +225,40 @@ def array(obj, dtype=None, copy=True, order=None):
 
 
 def zeros(shape, dtype=None, order=None):
-   return empty(shape, dtype, order)
+    """Return a new array of given shape and type, filled with zeros
+    """
+    array(obj, dtype=None, copy=True, order=None)
+    return empty(shape, dtype, order)
 
 
 def ones(shape, dtype=None, order=None):
+    """Return a new array of given shape and type, filled with ones
+    """
     a = empty(shape, dtype, order)
     a.fill(1)
     return a
 
 
 def empty(shape, dtype=None, order=None):
+    """Return a new array of given shape and type, without initializing entries
+    """
     return ndarray(shape, dtype, order=order)
 
 
 def arange(*args, **kwargs):
+    """ arange([start,] stop[, step,], dtype=None)
+
+    Return evenly spaced values within a given interval.
+    
+    Values are generated within the half-open interval ``[start, stop)``
+    (in other words, the interval including `start` but excluding `stop`).
+    For integer arguments the function is equivalent to the Python built-in
+    `range <http://docs.python.org/lib/built-in-funcs.html>`_ function,
+    but returns an ndarray rather than a list.
+
+    When using a non-integer step, such as 0.1, the results will often not
+    be consistent.  It is better to use ``linspace`` for these cases.
+    """
     # Get dtype
     dtype = kwargs.pop('dtype', None)
     if kwargs:
