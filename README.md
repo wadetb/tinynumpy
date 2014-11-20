@@ -1,5 +1,5 @@
-tinyndarray
-===========
+tinynnumpy
+==========
 
 Minimal, pure Python reimplementation of the NumPy N-dimensional array class.
 
