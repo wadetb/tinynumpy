@@ -1,0 +1,20 @@
+# Folders in root folder
+_website
+htmlcov
+build
+dist
+
+# Files in root folder
+MANIFEST
+.coverage
+
+# Specific folders
+docs/_build
+
+# Files / folders that should always be ignored
+__pychache__
+*.pyc
+*.pyo
+*.dll
+*.dylib
+
