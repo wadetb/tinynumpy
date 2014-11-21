@@ -51,7 +51,8 @@ if sys.version_info >= (3, ):
 __version__ = '0.0.1dev'
 
 # Define dtypes: struct name, short name, numpy name, ctypes type
-_dtypes = [('b', 'i1', 'int8', ctypes.c_int8),
+_dtypes = [('B', 'b1', 'bool', ctypes.c_bool),
+           ('b', 'i1', 'int8', ctypes.c_int8),
            ('B', 'u1', 'uint8', ctypes.c_uint8),
            ('h', 'i2', 'int16', ctypes.c_int16),
            ('H', 'u2', 'uint16', ctypes.c_uint16),
@@ -561,6 +562,14 @@ class ndarray(object):
         s = _repr_r('', 0, self._offset)
         return "array(" + s + ", dtype='%s')" % self.dtype
     
+    def __eq__(self, other):
+        if other.__module__.split('.')[0] == 'numpy':
+            return other == self
+        else:
+            out = empty(self.shape, 'bool')
+            out[:] = [i1==i2 for (i1, i2) in zip(self.flat, other.flat)]
+            return out
+    
     def _index_helper(self, key):
         
         # Indexing spec is located at:
@@ -726,13 +735,11 @@ class ndarray(object):
         return out
     
     def reshape(self, newshape):
-        # todo: view if possible
-        if False:  # self.c_contiguous
-            out = self
+        if _get_step(self) == 1:
+            a = self
         else:
-            out = self.copy()
-        out.shape = newshape
-        return out
+            a = self.copy()
+        return ndarray(newshape, a.dtype, buffer=a.data, offset=a._offset)
     
     def astype(self, dtype):
         out = empty(self.shape, dtype)

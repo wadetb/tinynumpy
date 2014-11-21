@@ -33,8 +33,8 @@ Caveats
 * ndarray.flat iterator cannot be indexed (it is a generator).
 * ndarray.flags is not supported (but might be soon).
 * No support for Fortran order.
-* Support for data types limited to uin8, uint16, uint32, uint64, int8,
-  int16, int32, int64, float32, float64.
+* Support for data types limited to bool, uin8, uint16, uint32, uint64,
+  int8, int16, int32, int64, float32, float64.
 * Functions that calculate statistics on the data are much slower, since.
   the iteration takes place in Python.
 * Assigning via slicing is usually pretty fast, but can be slow if the
