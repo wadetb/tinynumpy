@@ -227,7 +227,6 @@ def array(obj, dtype=None, copy=True, order=None):
 def zeros(shape, dtype=None, order=None):
     """Return a new array of given shape and type, filled with zeros
     """
-    array(obj, dtype=None, copy=True, order=None)
     return empty(shape, dtype, order)
 
 
@@ -560,7 +559,10 @@ class ndarray(object):
             return s
 
         s = _repr_r('', 0, self._offset)
-        return "array(" + s + ", dtype='%s')" % self.dtype
+        if self.dtype != 'float64':
+            return "array(" + s + ", dtype='%s')" % self.dtype
+        else:
+            return "array(" + s + ")"
     
     def _index_helper(self, key):
         
@@ -830,3 +832,29 @@ class ndarray(object):
             L.append(p)
         out[:] = L
         return out
+
+class nditer:
+    def __init__(self, array):
+        self.array = array
+        self.key = [0] * len(self.array.shape)
+
+    def __iter__(self):
+        return self
+
+    def __len__(self):
+        return _size_for_shape(self.array.shape)
+
+    def __getitem__(self, index):
+        key = _key_for_index(index, self.array.shape)
+        return self.array[key]
+
+    def __next__(self):
+        if self.key is None:
+            raise StopIteration
+        value = self.array[tuple(self.key)]
+        if not _increment_mutable_key(self.key, self.array.shape):
+            self.key = None
+        return value
+
+    def next(self):
+        return self.__next__()
