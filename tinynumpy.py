@@ -39,6 +39,10 @@ numpy, or that certain features may not be supported.
 # todo: keep track of readonly better
 # todo: mathematical operators
 # todo: more methods?
+# todo: logspace, meshgrid
+# todo: Fortran order?
+
+from __future__ import division
 
 import sys
 import ctypes
@@ -122,6 +126,10 @@ def _size_for_shape(shape):
     return stride_product
 
 
+def squeeze_strides(s):
+    """ Pop strides for singular dimensions. """
+    return tuple([s[0]] + [s[i] for i in range(1, len(s)) if s[i] != s[i-1]])
+
 def _shape_from_object(obj):
     
     shape = []
@@ -195,8 +203,17 @@ def array(obj, dtype=None, copy=True, order=None):
     """
     dtype = _convert_dtype(dtype)
     
+    if isinstance(obj, ndarray):
+        # From existing array
+        a = obj.view()
+        if dtype is not None and dtype != a.dtype:
+            a = a.astype(dtype)
+        elif copy:
+            a = a.copy()
+        return a
     if hasattr(obj, '__array_interface__'):
-        # Hey, already an array!
+        # From something that looks like an array, we can create
+        # the ctypes array for this and use that as a buffer
         D = obj.__array_interface__
         # Get dtype
         dtype_orig = _convert_dtype(D['typestr'][1:])
@@ -223,6 +240,27 @@ def array(obj, dtype=None, copy=True, order=None):
         a = ndarray(shape, dtype, order=None)
         _assign_from_object(a, obj)
         return a
+
+
+def zeros_like(a, dtype=None, order=None):
+    """ Return an array of zeros with the same shape and type as a given array.
+    """
+    dtype = a.dtype if dtype is None else dtype
+    return zeros(a.shape, dtype, order)
+
+
+def ones_like(a, dtype=None, order=None):
+    """ Return an array of ones with the same shape and type as a given array.
+    """
+    dtype = a.dtype if dtype is None else dtype
+    return ones(a.shape, dtype, order)
+
+
+def empty_like(a, dtype=None, order=None):
+    """ Return a new array with the same shape and type as a given array.
+    """
+    dtype = a.dtype if dtype is None else dtype
+    return empty(a.shape, dtype, order)
 
 
 def zeros(shape, dtype=None, order=None):
@@ -282,6 +320,30 @@ def arange(*args, **kwargs):
     return a
 
 
+def linspace(start, stop, num=50, endpoint=True, retstep=False, dtype=None):
+    """ linspace(start, stop, num=50, endpoint=True, retstep=False, dtype=None)
+    
+    Return evenly spaced numbers over a specified interval. Returns num
+    evenly spaced samples, calculated over the interval [start, stop].
+    The endpoint of the interval can optionally be excluded.
+    """
+    # Prepare
+    start, stop = float(start), float(stop)
+    ra = stop - start
+    if endpoint:
+        step = ra / (num-1)
+    else:
+        step = ra / num
+    # Create
+    a = empty((num,), dtype)
+    a[:] = [start + i * step for i in xrange(num)]
+    # Return
+    if retstep:
+        return a, step
+    else:
+        return a
+
+
 class ndarray(object):
     """ ndarray(shape, dtype='float64', buffer=None, offset=0,
                 strides=None, order=None)
@@ -307,9 +369,8 @@ class ndarray(object):
         Any object that can be interpreted as a numpy data type.
     buffer : object contaning data, optional
         Used to fill the array with data. If another ndarray is given,
-        the underlying data is used. Can also be a array.array, a
-        ctypes.Array, bytes, a 1D numpy array, or any object containing
-        1D indexing.
+        the underlying data is used. Can also be a ctypes.Array or any
+        object that exposes the buffer interface.
     offset : int, optional
         Offset of array data in buffer.
     strides : tuple of ints, optional
@@ -395,8 +456,6 @@ class ndarray(object):
         
         if buffer is None:
             # New array
-            self._data = (_convert_dtype(dtype, 'ctypes') * self.size)()
-            #self._data = dataarray.array(_dtypes[dtype], _zerositer(self.size))
             self._base = None
             # Check and set offset and strides
             assert offset == 0
@@ -406,12 +465,9 @@ class ndarray(object):
         
         else:
             # Existing array
+            self._base = buffer  # Keep a reference to avoid memory cleanup
             if isinstance(buffer, ndarray):
-                self._base = buffer
-                self._data = buffer.data
-            else:
-                self._base = None
-                self._data = buffer
+                buffer = buffer.data
             # Check and set offset
             assert isinstance(offset, int) and offset >= 0
             self._offset = offset
@@ -422,6 +478,17 @@ class ndarray(object):
             assert all([isinstance(x, int) for x in strides])
             assert len(strides) == len(shape)
             self._strides = strides
+        
+        # Define our buffer class
+        realsize = self._strides[0] * self._shape[0] // self._itemsize
+        BufferClass = _convert_dtype(dtype, 'ctypes') * realsize
+        # Create buffer
+        if buffer is None:
+            self._data = BufferClass()
+        elif isinstance(buffer, ctypes.Array):
+            self._data = BufferClass.from_address(ctypes.addressof(buffer))
+        else:
+            self._data = BufferClass.from_buffer(buffer)
     
     @property
     def __array_interface__(self):
@@ -646,13 +713,53 @@ class ndarray(object):
     def _get_shape(self):
         return self._shape
     
-    def _set_shape(self, shape):
-        if self.size != _size_for_shape(shape):
+    def _set_shape(self, newshape):
+        if newshape == self.shape:
+            return
+        if self.size != _size_for_shape(newshape):
             raise ValueError('Total size of new array must be unchanged')
-        self._shape = tuple(shape)
-        self._strides = _strides_for_shape(self._shape, self.itemsize)
+        if _get_step(self) == 1:
+            # Contiguous, hooray!
+            self._shape = tuple(newshape)
+            self._strides = _strides_for_shape(self._shape, self.itemsize)
+            return
+        
+        # Else, try harder ... This code supports adding /removing
+        # singleton dimensions. Although it may sometimes be possible
+        # to split a dimension in two if the contiguous blocks allow
+        # this, we don't bother with such complex cases for now.
+        # Squeeze shape / strides 
+        N = self.ndim
+        shape = [self.shape[i] for i in range(N) if self.shape[i] > 1]
+        strides = [self.strides[i] for i in range(N) if self.shape[i] > 1]
+        # Check if squeezed shapes match
+        newshape_ = [newshape[i] for i in range(len(newshape)) 
+                     if newshape[i] > 1]
+        if newshape_ != shape:
+            raise AttributeError('incompatible shape for non-contiguous array')
+        # Modify to make this data work in loop
+        strides.append(strides[-1])
+        shape.append(1)
+        # Form new strides
+        i = -1
+        newstrides = []
+        try:
+            for s in reversed(newshape):
+                if s == 1:
+                    newstrides.append(strides[i] * shape[i])
+                else:
+                    i -= 1
+                    newstrides.append(strides[i])
+        except IndexError:
+            # Fail
+            raise AttributeError('incompatible shape for non-contiguous array')
+        else:
+            # Success
+            newstrides.reverse()
+            self._shape = tuple(newshape)
+            self._strides = tuple(newstrides)
     
-    shape = property(_get_shape, _set_shape)
+    shape = property(_get_shape, _set_shape)  # Python 2.5 compat (e.g. Jython)
     
     @property
     def strides(self):
@@ -735,15 +842,32 @@ class ndarray(object):
         return out
     
     def reshape(self, newshape):
-        if _get_step(self) == 1:
-            a = self
-        else:
-            a = self.copy()
-        return ndarray(newshape, a.dtype, buffer=a.data, offset=a._offset)
+        out = self.view()
+        try:
+            out.shape = newshape
+        except AttributeError:
+            out = self.copy()
+            out.shape = newshape
+        return out
     
     def astype(self, dtype):
         out = empty(self.shape, dtype)
         out[:] = self
+    
+    def view(self, dtype=None, type=None):
+        if dtype is None:
+            dtype = self.dtype
+        if dtype == self.dtype:
+            return ndarray(self.shape, dtype, buffer=self, 
+                           offset=self._offset, strides=self.strides)
+        elif self.ndim == 1:
+            itemsize = int(_convert_dtype(dtype, 'short')[-1])
+            size = self.nbytes // itemsize
+            offsetinbytes = self._offset * self.itemsize
+            offset = offsetinbytes // itemsize
+            return ndarray((size, ), dtype, buffer=self, offset=offset)
+        else:
+            raise ValueError('new type not compatible with array.')
     
     ## Methods - statistics
     

@@ -15,7 +15,7 @@ from pytest import raises, skip
 
 import tinynumpy as tnp
 
-# Numpy is optional. If available, will do extra comparison tests.
+# Numpy is optional. If not available, will compare against ourselves.
 try:
     import numpy as np
 except ImportError:
@@ -96,9 +96,21 @@ def test_reshape():
         assert a.shape == b.shape
         assert a.strides == b.strides
     
+    
+    a.shape = 2, 4
+    b.shape = 2, 4
+    a2 = a[:, 2:]
+    b2 = b[:, 2:]
+    
     # Fail
+    with raises(ValueError):  # Invalid shape
+        a.shape = (3, 3)
     with raises(ValueError):
         b.shape = (3, 3)
+    with raises(AttributeError):  # Cannot reshape non-contiguous arrays
+        a2.shape = 4,
+    with raises(AttributeError):
+        b2.shape = 4,
 
 
 def test_from_and_to_numpy():
@@ -164,7 +176,7 @@ def test_from_ctypes():
 
 
 def test_from_bytes():
-    
+    skip('Need ndarray.frombytes or something')
     # Create bytes
     buffer = b'x' * 100
     
