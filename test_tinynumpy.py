@@ -5,8 +5,12 @@
 """ Test suite for tinynumpy
 """
 
+import os
+import sys
 import ctypes
 
+import pytest
+from _pytest import runner
 from pytest import raises
 
 import tinynumpy as tnp
@@ -199,26 +203,36 @@ def test_getitem():
 
 
 if __name__ == '__main__':
-    # Allow running this file as a script
     
-    # Collect function names
-    test_functions = []
-    for line in open(__file__, 'rt').readlines():
-        if line.startswith('def'):
-            name = line[3:].split('(')[0].strip()
-            if name.startswith('test_'):
-                test_functions.append(name)
-    # Report
-    print('Collected %i test functions.' % len(test_functions))
-    # Run
-    print('\nRunning tests ...\n')
-    for name in test_functions:
-        print('Running %s ... ' % name, end='')
-        func = globals()[name]
-        try:
-            func()
-        except Exception:
-            print('FAIL')
-            raise
-        else:
-            print('OK')
+    # Run tests with or without pytest. Running with pytest creates
+    # coverage report, running without allows PM debugging to fix bugs.
+    if True:
+        del sys.modules['tinynumpy']
+        pytest.main('-v -x --color=yes --cov tinynumpy --cov-config .coveragerc '
+                    '--cov-report html %s' % repr(__file__))
+        # Run these lines to open coverage report
+        #import webbrowser
+        #webbrowser.open_new_tab(os.path.join('htmlcov', 'index.html'))
+    
+    else:
+        # Collect function names
+        test_functions = []
+        for line in open(__file__, 'rt').readlines():
+            if line.startswith('def'):
+                name = line[3:].split('(')[0].strip()
+                if name.startswith('test_'):
+                    test_functions.append(name)
+        # Report
+        print('Collected %i test functions.' % len(test_functions))
+        # Run
+        print('\nRunning tests ...\n')
+        for name in test_functions:
+            print('Running %s ... ' % name, end='')
+            func = globals()[name]
+            try:
+                func()
+            except Exception:
+                print('FAIL')
+                raise
+            else:
+                print('OK')

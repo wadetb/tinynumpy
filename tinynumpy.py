@@ -227,7 +227,6 @@ def array(obj, dtype=None, copy=True, order=None):
 def zeros(shape, dtype=None, order=None):
     """Return a new array of given shape and type, filled with zeros
     """
-    array(obj, dtype=None, copy=True, order=None)
     return empty(shape, dtype, order)
 
 
