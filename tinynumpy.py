@@ -238,6 +238,16 @@ def ones(shape, dtype=None, order=None):
     return a
 
 
+def eye(size):
+    """Return a new 2d array with given dimensions, filled with ones on the
+    diagonal and zeros elsewhere.
+    """
+    a = zeros((size,size))
+    for i in xrange(size):
+        a[i,i] = 1
+    return a
+
+
 def empty(shape, dtype=None, order=None):
     """Return a new array of given shape and type, without initializing entries
     """
@@ -778,7 +788,19 @@ class ndarray(object):
         for i in self.flat:
             p *= float(i)
         return p
-    
+        
+    def ptp(self, axis=None):
+        if axis:
+            raise (TypeError, "axis argument is not supported")
+        mn = self.data[self._offset]
+        mx = mn
+        for i in self.flat:
+            if i > mx:
+                mx = i
+            if i < mn:
+                mn = i
+        return mx - mn
+
     def mean(self, axis=None):
         if axis:
             raise (TypeError, "axis argument is not supported")
@@ -787,24 +809,22 @@ class ndarray(object):
     def argmax(self, axis=None):
         if axis:
             raise (TypeError, "axis argument is not supported")
-        r = self[[0 for i in range(self.ndim)]]
+        r = self.data[self._offset]
         r_index = 0
         for i_index, i in enumerate(self.flat):
-            v = float(i)
-            if v > r:
-                r = v
+            if i > r:
+                r = i
                 r_index = i_index
         return r_index
 
     def argmin(self, axis=None):
         if axis:
             raise (TypeError, "axis argument is not supported")
-        r = self[[0 for i in range(self.ndim)]]
+        r = self.data[self._offset]
         r_index = 0
         for i_index, i in enumerate(self.flat):
-            v = float(i)
-            if v < r:
-                r = v
+            if i < r:
+                r = i
                 r_index = i_index
         return r_index
     
@@ -813,7 +833,7 @@ class ndarray(object):
             raise (TypeError, "axis argument is not supported")
         if out is None:
             out = empty((self.size,), self.dtype)
-        p = 1.0
+        p = 1
         L = []
         for x in self.flat:
             p *= x
@@ -826,6 +846,7 @@ class ndarray(object):
             raise (TypeError, "axis argument is not supported")
         if out is None:
             out = empty((self.size,))
+        p = 0
         L = []
         for x in self.flat:
             p += x
