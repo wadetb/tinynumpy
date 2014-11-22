@@ -5,18 +5,27 @@
 """ Test suite for tinynumpy
 """
 
+import os
+import sys
 import ctypes
 
-from pytest import raises
+import pytest
+from _pytest import runner
+from pytest import raises, skip
 
 import tinynumpy as tnp
 
-# Numpy is optional. If available, will do extra comparison tests.
-# todo: make this tests runnable without numpy
+# Numpy is optional. If not available, will compare against ourselves.
 try:
     import numpy as np
 except ImportError:
-    np = None
+    np = tnp
+
+
+def test_TESTING_WITH_NUMPY():
+    # So we can see in the result whether numpy was used
+    if np is None or np is tnp:
+        skip('Numpy is not available')
 
 
 def test_shapes_and_strides():
@@ -30,6 +39,7 @@ def test_shapes_and_strides():
         # Test shape and strides
         a = np.empty(shape)
         b = tnp.empty(shape)
+        assert a.ndim == len(shape)
         assert a.ndim == b.ndim
         assert a.shape == b.shape
         assert a.strides == b.strides
@@ -64,8 +74,8 @@ def test_repr():
 def test_dtype():
     
     for shape in [(9, ), (9, 4), (9, 4, 5)]:
-        for dtype in ['int8', 'uint8', 'int16', 'uint16', 'int32', 'uint32', 
-                      'float32', 'float64']:
+        for dtype in ['bool', 'int8', 'uint8', 'int16', 'uint16',
+                      'int32', 'uint32', 'float32', 'float64']:
             a = np.empty(shape, dtype=dtype)
             b = tnp.empty(shape, dtype=dtype)
             assert a.shape == b.shape
@@ -86,9 +96,21 @@ def test_reshape():
         assert a.shape == b.shape
         assert a.strides == b.strides
     
+    
+    a.shape = 2, 4
+    b.shape = 2, 4
+    a2 = a[:, 2:]
+    b2 = b[:, 2:]
+    
     # Fail
+    with raises(ValueError):  # Invalid shape
+        a.shape = (3, 3)
     with raises(ValueError):
         b.shape = (3, 3)
+    with raises(AttributeError):  # Cannot reshape non-contiguous arrays
+        a2.shape = 4,
+    with raises(AttributeError):
+        b2.shape = 4,
 
 
 def test_from_and_to_numpy():
@@ -154,7 +176,7 @@ def test_from_ctypes():
 
 
 def test_from_bytes():
-    
+    skip('Need ndarray.frombytes or something')
     # Create bytes
     buffer = b'x' * 100
     
@@ -199,26 +221,38 @@ def test_getitem():
 
 
 if __name__ == '__main__':
-    # Allow running this file as a script
     
-    # Collect function names
-    test_functions = []
-    for line in open(__file__, 'rt').readlines():
-        if line.startswith('def'):
-            name = line[3:].split('(')[0].strip()
-            if name.startswith('test_'):
-                test_functions.append(name)
-    # Report
-    print('Collected %i test functions.' % len(test_functions))
-    # Run
-    print('\nRunning tests ...\n')
-    for name in test_functions:
-        print('Running %s ... ' % name, end='')
-        func = globals()[name]
-        try:
-            func()
-        except Exception:
-            print('FAIL')
-            raise
-        else:
-            print('OK')
+    # Run tests with or without pytest. Running with pytest creates
+    # coverage report, running without allows PM debugging to fix bugs.
+    if False:
+        del sys.modules['tinynumpy']  # or coverage wont count globals
+        pytest.main('-v -x --color=yes --cov tinynumpy --cov-config .coveragerc '
+                    '--cov-report html %s' % repr(__file__))
+        # Run these lines to open coverage report
+        #import webbrowser
+        #webbrowser.open_new_tab(os.path.join('htmlcov', 'index.html'))
+    
+    else:
+        # Collect function names
+        test_functions = []
+        for line in open(__file__, 'rt').readlines():
+            if line.startswith('def'):
+                name = line[3:].split('(')[0].strip()
+                if name.startswith('test_'):
+                    test_functions.append(name)
+        # Report
+        print('Collected %i test functions.' % len(test_functions))
+        # Run
+        print('\nRunning tests ...\n')
+        for name in test_functions:
+            print('Running %s ... ' % name, end='')
+            func = globals()[name]
+            try:
+                func()
+            except runner.Skipped as err:
+                print('SKIP:', err)
+            except Exception:
+                print('FAIL')
+                raise
+            else:
+                print('OK')
