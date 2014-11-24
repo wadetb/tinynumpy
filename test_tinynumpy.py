@@ -96,11 +96,21 @@ def test_reshape():
         assert a.shape == b.shape
         assert a.strides == b.strides
     
-    
     a.shape = 2, 4
     b.shape = 2, 4
+    
+    # Test transpose
+    assert b.T.shape == (4, 2)
+    assert (a.T == b.T).all()
+    assert (b.T.T == b).all()
+    
+    # Make non-contiguous versions
     a2 = a[:, 2:]
     b2 = b[:, 2:]
+    
+    # Test contiguous flag
+    assert a.flags['C_CONTIGUOUS']
+    assert not a2.flags['C_CONTIGUOUS']
     
     # Fail
     with raises(ValueError):  # Invalid shape

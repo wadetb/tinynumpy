@@ -18,8 +18,8 @@ Links
 Features
 --------
 
-* The ndarray class has almost all the same properties as the numpy
-  ndarray class.
+* The ndarray class has all the same properties as the numpy ndarray
+  class.
 * Pretty good compliance with numpy in terms of behavior (such as views).
 * Can be converted to a numpy array (whith shared memory).
 * Can get views of real numpy arrays (with shared memory).
@@ -31,7 +31,6 @@ Caveats
 -------
 
 * ndarray.flat iterator cannot be indexed (it is a generator).
-* ndarray.flags is not supported (but might be soon).
 * No support for Fortran order.
 * Support for data types limited to bool, uin8, uint16, uint32, uint64,
   int8, int16, int32, int64, float32, float64.
@@ -79,5 +78,4 @@ array([[ 1.,  2.],
 
 >>> b
 array([ 100.,  2.,  3.,  4.,  5.,  6.,  7.,  8.], dtype='float64')
-# This last one does not yet work, but it will soon
 ```
