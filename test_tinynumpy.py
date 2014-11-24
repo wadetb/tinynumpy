@@ -83,6 +83,9 @@ def test_dtype():
             assert a.itemsize == b.itemsize
     
     raises(TypeError, tnp.zeros, (9, ), 'blaa')
+    
+    assert tnp.array([1.0, 2.0]).dtype == 'float64'
+    assert tnp.array([1, 2]).dtype == 'int64'
 
 
 def test_reshape():
@@ -111,6 +114,12 @@ def test_reshape():
     # Test contiguous flag
     assert a.flags['C_CONTIGUOUS']
     assert not a2.flags['C_CONTIGUOUS']
+    
+    # Test base
+    assert a2.base is a
+    assert b2.base is b
+    assert a2[:].base is a
+    assert b2[:].base is b
     
     # Fail
     with raises(ValueError):  # Invalid shape

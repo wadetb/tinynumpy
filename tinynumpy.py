@@ -32,7 +32,6 @@ Be aware that the behavior of tinynumpy may deviate in some ways from
 numpy, or that certain features may not be supported.
 """
 
-# todo: if base has a base, use that
 # todo: keep track of readonly better
 # todo: mathematical operators
 # todo: more methods?
@@ -130,7 +129,7 @@ def squeeze_strides(s):
 def _shape_from_object(obj):
     
     shape = []
-
+    # todo: make more efficient, use len() etc
     def _shape_from_object_r(index, element, axis):
         try:
             for i, e in enumerate(element):
@@ -150,7 +149,7 @@ def _shape_from_object(obj):
 
 def _assign_from_object(array, obj):
     key = []
-
+    # todo: make more efficient, especially the try-except
     def _assign_from_object_r(element):
         try:
             for i, e in enumerate(element):
@@ -234,6 +233,14 @@ def array(obj, dtype=None, copy=True, order=None):
     else:
         # From some kind of iterable
         shape = _shape_from_object(obj)
+        # Try to derive dtype
+        if dtype is None:
+            el = obj
+            while isinstance(el, (tuple, list)) and el:
+                el = el[0]
+            if isinstance(el, int):
+                dtype = 'int64'
+        # Create array
         a = ndarray(shape, dtype, order=None)
         _assign_from_object(a, obj)
         return a
@@ -463,7 +470,11 @@ class ndarray(object):
         
         else:
             # Existing array
-            self._base = buffer  # Keep a reference to avoid memory cleanup
+            if isinstance(buffer, ndarray) and buffer.base is not None:
+                buffer = buffer.base
+            # Keep a reference to avoid memory cleanup
+            self._base = buffer
+            # for ndarray we use the data property
             if isinstance(buffer, ndarray):
                 buffer = buffer.data
             # Check and set offset
