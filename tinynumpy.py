@@ -490,7 +490,7 @@ class ndarray(object):
             self._strides = strides
         
         # Define our buffer class
-        realsize = self._strides[0] * self._shape[0] // self._itemsize
+        realsize = self._offset + self._strides[0] * self._shape[0] // self._itemsize
         BufferClass = _convert_dtype(dtype, 'ctypes') * realsize
         # Create buffer
         if buffer is None:
@@ -554,7 +554,7 @@ class ndarray(object):
         if not shape:
             self._data[offset] = value
             return
-        
+
         # Create view to set data to
         view = ndarray(shape, self.dtype,
                         offset=offset, strides=strides, buffer=self)
@@ -682,7 +682,10 @@ class ndarray(object):
                 raise TypeError("ellipsis are not supported.")
             elif k is None:
                 shape.append(1)
-                strides.append(0)
+                stride = 1
+                for s in self._strides[axis:]:
+                    stride *= s
+                strides.append(stride)
             else:
                 raise TypeError("key elements must be instaces of int or slice.")
 
