@@ -72,6 +72,7 @@ class TestFunctions(unittest.TestCase):
 
         a1 = [[1,2],[3,4]]
         self.t1 = tinynumpy.array(a1)
+        self.n1 = numpy.array(a1)
 
     def test_array(self):
         # NumPy requires that the input array be full in all dimensions, so don't check compatibility.
@@ -139,6 +140,14 @@ class TestFunctions(unittest.TestCase):
 
     def test_flatten(self):
         self.assertEqual(_clean_repr(self.t1.flatten()), _clean_repr(tinynumpy.array([1, 2, 3, 4])))
+
+    def test_var(self):
+        self.assertEqual(tinynumpy.array([1,1,1,1]).var(), 0)
+        self.assertEqual(_clean_repr(self.t1.var()), _clean_repr(self.n1.var()))
+
+    def test_std(self):
+        self.assertEqual(tinynumpy.array([1,1,1,1]).std(), 0)
+        self.assertEqual(int(self.t1.std()*1000000), int(self.n1.std()*1000000))
 
 if __name__ == '__main__':
     unittest.main()

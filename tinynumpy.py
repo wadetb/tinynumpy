@@ -43,6 +43,8 @@ from __future__ import division
 import sys
 import ctypes
 
+from math import sqrt
+
 # Python 2/3 compat
 if sys.version_info >= (3, ):
     xrange = range
@@ -1030,6 +1032,18 @@ class ndarray(object):
             L.append(p)
         out[:] = L
         return out
+
+    def var(self, axis=None):
+        if axis:
+            raise (TypeError, "axis argument is not supported")
+        m = self.mean()
+        acc = 0
+        for x in self.flat:
+            acc += abs(x - m) ** 2
+        return acc / self.size
+
+    def std(self, axis=None):
+        return sqrt(self.var(axis))
 
 class nditer:
     def __init__(self, array):
