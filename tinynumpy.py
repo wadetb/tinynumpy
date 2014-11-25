@@ -32,10 +32,6 @@ Be aware that the behavior of tinynumpy may deviate in some ways from
 numpy, or that certain features may not be supported.
 """
 
-# todo: ndarray.T (should be pretty efficient)
-# todo: ndarray.flags
-# todo: deal with non-contiguous data better (e.g. better checking)
-# todo: always use ctypes array
 # todo: keep track of readonly better
 # todo: mathematical operators
 # todo: more methods?
@@ -133,7 +129,7 @@ def squeeze_strides(s):
 def _shape_from_object(obj):
     
     shape = []
-
+    # todo: make more efficient, use len() etc
     def _shape_from_object_r(index, element, axis):
         try:
             for i, e in enumerate(element):
@@ -153,7 +149,7 @@ def _shape_from_object(obj):
 
 def _assign_from_object(array, obj):
     key = []
-
+    # todo: make more efficient, especially the try-except
     def _assign_from_object_r(element):
         try:
             for i, e in enumerate(element):
@@ -237,6 +233,14 @@ def array(obj, dtype=None, copy=True, order=None):
     else:
         # From some kind of iterable
         shape = _shape_from_object(obj)
+        # Try to derive dtype
+        if dtype is None:
+            el = obj
+            while isinstance(el, (tuple, list)) and el:
+                el = el[0]
+            if isinstance(el, int):
+                dtype = 'int64'
+        # Create array
         a = ndarray(shape, dtype, order=None)
         _assign_from_object(a, obj)
         return a
@@ -390,18 +394,19 @@ class ndarray(object):
 
     Attributes
     ----------
-    T : ndarray NOT SUPPORTED
-        Transpose of the array.
+    T : ndarray
+        Transpose of the array. In tinynumpy only supported for ndim <= 3.
     data : buffer
-        The array's elements, in memory.
+        The array's elements, in memory. In tinynumpy this is a ctypes array.
     dtype : str
-        Describes the format of the elements in the array.
-    flags : dict NOT SUPPORTED
+        Describes the format of the elements in the array. In tinynumpy
+        this is a string.
+    flags : dict
         Dictionary containing information related to memory use, e.g.,
         'C_CONTIGUOUS', 'OWNDATA', 'WRITEABLE', etc.
     flat : iterator object
-        Flattened version of the array as an iterator. In contrast to
-        numpy, cannot assign or index to the iterator.
+        Flattened version of the array as an iterator. In tinynumpy
+        the iterator cannot be indexed.
     size : int
         Number of elements in the array.
     itemsize : int
@@ -475,7 +480,11 @@ class ndarray(object):
         
         else:
             # Existing array
-            self._base = buffer  # Keep a reference to avoid memory cleanup
+            if isinstance(buffer, ndarray) and buffer.base is not None:
+                buffer = buffer.base
+            # Keep a reference to avoid memory cleanup
+            self._base = buffer
+            # for ndarray we use the data property
             if isinstance(buffer, ndarray):
                 buffer = buffer.data
             # Check and set offset
@@ -490,8 +499,9 @@ class ndarray(object):
             self._strides = strides
         
         # Define our buffer class
-        realsize = self._offset + self._strides[0] * self._shape[0] // self._itemsize
-        BufferClass = _convert_dtype(dtype, 'ctypes') * realsize
+        buffersize = self._strides[0] * self._shape[0] // self._itemsize
+        buffersize += self._offset
+        BufferClass = _convert_dtype(dtype, 'ctypes') * buffersize
         # Create buffer
         if buffer is None:
             self._data = BufferClass()
@@ -649,6 +659,8 @@ class ndarray(object):
             out = empty(self.shape, 'bool')
             out[:] = [i1==i2 for (i1, i2) in zip(self.flat, other.flat)]
             return out
+    
+    ## Private helper functions
     
     def _index_helper(self, key):
         
@@ -816,11 +828,22 @@ class ndarray(object):
     
     @property
     def T(self):
-        raise NotImplementedError()
+        if self.ndim < 2:
+            return self
+        else:
+            return self.transpose()
     
     @property
     def flags(self):
-        raise NotImplementedError()
+        
+        c_cont = _get_step(self) == 1
+        return dict(C_CONTIGUOUS=c_cont,
+                    F_CONTIGUOUS=(c_cont and self.ndim < 2),
+                    OWNDATA=(self._base is None),
+                    WRITEABLE=True, # todo: fix this
+                    ALIGNED=c_cont,  # todo: different from contiguous?
+                    UPDATEIFCOPY=False,  # We don't support this feature
+               )
     
     ## Methods - managemenet
     
@@ -864,6 +887,26 @@ class ndarray(object):
         except AttributeError:
             out = self.copy()
             out.shape = newshape
+        return out
+    
+    def transpose(self):
+        # Numpy returns a view, but we cannot do that since we do not
+        # support Fortran ordering
+        ndim = self.ndim
+        if ndim < 2:
+            return self.view()
+        shape = self.shape[::-1]
+        out = empty(shape, self.dtype)
+        #
+        if ndim == 2:
+            for i in xrange(self.shape[0]):
+                out[:, i] = self[i, :]
+        elif ndim == 3:
+            for i in xrange(self.shape[0]):
+                for j in xrange(self.shape[1]):
+                    out[:, j, i] = self[i, j, :]
+        else:
+            raise ValueError('Tinynumpy supports transpose up to ndim=3')
         return out
     
     def astype(self, dtype):
@@ -979,7 +1022,7 @@ class ndarray(object):
         if axis:
             raise (TypeError, "axis argument is not supported")
         if out is None:
-            out = empty((self.size,))
+            out = empty((self.size,), self.dtype)
         p = 0
         L = []
         for x in self.flat:
