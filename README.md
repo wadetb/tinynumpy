@@ -34,7 +34,7 @@ Caveats
 * No support for Fortran order.
 * Support for data types limited to bool, uin8, uint16, uint32, uint64,
   int8, int16, int32, int64, float32, float64.
-* Functions that calculate statistics on the data are much slower, since.
+* Functions that calculate statistics on the data are much slower, since
   the iteration takes place in Python.
 * Assigning via slicing is usually pretty fast, but can be slow if the
   striding is unfortunate.
