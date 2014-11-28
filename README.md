@@ -21,7 +21,7 @@ Features
 * The ndarray class has all the same properties as the numpy ndarray
   class.
 * Pretty good compliance with numpy in terms of behavior (such as views).
-* Can be converted to a numpy array (whith shared memory).
+* Can be converted to a numpy array (with shared memory).
 * Can get views of real numpy arrays (with shared memory).
 * Support for wrapping ctypes arrays, or provide ctypes pointer to data.
 * Pretty fast for being pure Python.
