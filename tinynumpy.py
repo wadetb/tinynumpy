@@ -442,6 +442,9 @@ class ndarray(object):
     
     """
     
+    __slots__ = ['_dtype', '_shape', '_strides', '_itemsize', 
+                 '_offset', '_base', '_data']
+    
     def __init__(self, shape, dtype='float64', buffer=None, offset=0,
                  strides=None, order=None):
         # Check order
@@ -936,6 +939,7 @@ class ndarray(object):
         if axis:
             raise (TypeError, "axis argument is not supported")
         return max(self.flat)
+        #return max(self._toflatlist())  # almost twice as fast
     
     def sum(self, axis=None):
         if axis:
