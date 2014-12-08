@@ -25,11 +25,11 @@
 """ 
 A lightweight, pure Python, numpy compliant ndarray class.
 
-The documenation in this module is kept compact. For details on each
+The documenation in this module is rather compact. For details on each
 function, see the corresponding documentation at:
-http://docs.scipy.org/doc/numpy/reference/index.html
-Be aware that the behavior of tinynumpy may deviate in some ways from
-numpy, or that certain features may not be supported.
+http://docs.scipy.org/doc/numpy/reference/index.html Be aware that the
+behavior of tinynumpy may deviate in some ways from numpy, or that
+certain features may not be supported.
 """
 
 # todo: keep track of readonly better
@@ -190,6 +190,10 @@ def _zerositer(n):
         yield 0
 
 
+
+## Public functions
+
+
 def array(obj, dtype=None, copy=True, order=None):
     """ array(obj, dtype=None, copy=True, order=None)
     
@@ -347,6 +351,8 @@ def linspace(start, stop, num=50, endpoint=True, retstep=False, dtype=None):
     else:
         return a
 
+
+## The class
 
 class ndarray(object):
     """ ndarray(shape, dtype='float64', buffer=None, offset=0,
