@@ -554,7 +554,7 @@ class ndarray(object):
                     )
     
     def __len__(self):
-        return self.size
+        return self.shape[0]
     
     def __getitem__(self, key):
         offset, shape, strides = self._index_helper(key)
