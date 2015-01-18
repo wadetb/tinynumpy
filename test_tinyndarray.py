@@ -31,6 +31,9 @@ class TestNDArray(unittest.TestCase):
     def test_double_slice(self):
         self.assertEqual(_clean_repr(self.t0[1:][2::2]), _clean_repr(self.n0[1:][2::2]))
 
+    def test_len(self):
+        self.assertEqual(len(self.t0), len(self.n0))
+
     def test_newaxis(self):
         self.assertEqual(self.t0[tinynumpy.newaxis,2:].shape, (1,2,4))
         self.assertEqual(self.n0[numpy.newaxis,2:].shape, (1,2,4))
