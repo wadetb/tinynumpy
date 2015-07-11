@@ -44,6 +44,10 @@ import sys
 import ctypes
 
 from math import sqrt
+import itertools as itr
+import operator
+import tinylinalg as linalg
+from tinylinalg import LinAlgError as LinAlgError
 
 # Python 2/3 compat
 if sys.version_info >= (3, ):
@@ -127,6 +131,7 @@ def _size_for_shape(shape):
 def squeeze_strides(s):
     """ Pop strides for singular dimensions. """
     return tuple([s[0]] + [s[i] for i in range(1, len(s)) if s[i] != s[i-1]])
+
 
 def _shape_from_object(obj):
     
@@ -363,6 +368,74 @@ def linspace(start, stop, num=50, endpoint=True, retstep=False, dtype=None):
     else:
         return a
 
+def add(ndarray_vec1, ndarray_vec2):
+    c = []
+    for a, b in zip(ndarray_vec1, ndarray_vec2):
+        c.append(a+b)
+    cRay = array(c)
+    return cRay
+
+def subtract(ndarray_vec1, ndarray_vec2):
+    c = []
+    for a, b in zip(ndarray_vec1, ndarray_vec2):
+        c.append(a-b)
+    cRay = array(c)
+    return cRay
+
+def multiply(ndarray_vec1, ndarray_vec2):
+    c = []
+    for a, b in zip(ndarray_vec1, ndarray_vec2):
+        c.append(a*b)
+    cRay = array(c)
+    return cRay
+
+def divide(ndarray_vec1, integer):
+    c = []
+    for a in ndarray_vec1:
+        c.append(a / integer)
+    cRay = array(c)
+    return cRay
+
+def cross(u, v):
+    """
+    Return the cross product of two 3 dimentional vectors.
+    """
+
+    uDim = len(u)
+    vDim = len(v)
+
+    uxv = []
+
+    # http://mathworld.wolfram.com/CrossProduct.html
+    if uDim == vDim == 3:
+        try:
+            for i in range(uDim):
+                uxv.append(0)
+                uxv = [u[1]*v[2]-u[2]*v[1], -(u[0]*v[2]-u[2]*v[0]),
+                       u[0]*v[1]-u[1]*v[0]]
+        except LinAlgError as e:
+            uxv = e
+    else:
+        raise IndexError('Vector has invalid dimensions')
+    return uxv
+
+def dot(u, v):
+    """
+    Return the dot product of two 3 dimentional vectors.
+    """
+
+    uDim = len(u)
+    vDim = len(v)
+
+    # http://reference.wolfram.com/language/ref/Dot.html
+    if uDim == vDim == 3:
+        try:
+            u_dot_v = sum(itr.imap(operator.mul, u, v))
+        except LinAlgError as e:
+            u_dot_v = e
+    else:
+        raise IndexError('Vector has invalid dimensions')
+    return u_dot_v
 
 ## The class
 

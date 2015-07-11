@@ -1,6 +1,12 @@
-import tinynumpy
-import numpy
+import tinynumpy as tinynumpy
 import unittest
+import pytest
+
+# Numpy is optional. If not available, will compare against ourselves.
+try:
+    import numpy
+except ImportError:
+    numpy = tinynumpy
 
 #numpy.set_printoptions(formatter={'float': repr})
 

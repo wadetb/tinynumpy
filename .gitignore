@@ -1,3 +1,6 @@
+# Sublime project files
+*.sublime-*
+
 # Folders in root folder
 _website
 htmlcov
