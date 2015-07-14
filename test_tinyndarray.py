@@ -1,4 +1,4 @@
-import tinynumpy as tinynumpy
+import tinynumpy
 import unittest
 import pytest
 

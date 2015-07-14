@@ -392,3 +392,47 @@ def test_det():
     a = tnp.linalg.det(mat)
 
     assert a == 103
+
+# Start simple math function tests
+def test_add():
+    """test the addition function for tinynumpy"""
+
+    x = [5, -2, 1]
+    y = [0, 3, -1]
+
+    a = tnp.add(x,y)
+
+    assert a == tnp.array([5, 1, 0], dtype='int64')
+
+
+def test_subtract():
+    """test the addition function for tinynumpy"""
+
+    x = [5, -2, 1]
+    y = [0, 3, -1]
+
+    a = tnp.add(x,y)
+
+    assert a == tnp.array([5, -5, -2], dtype='int64')
+
+
+def test_divide():
+    """test the addition function for tinynumpy"""
+
+    x = [15, -12, 3]
+    y = 3
+
+    a = tnp.divide(x,y)
+
+    assert a == tnp.array([5, -4, 1], dtype='int64')
+
+
+def test_multiply():
+    """test the addition function for tinynumpy"""
+
+    x = [5, -2, 1]
+    y = [0, 3, -1]
+
+    a = tnp.multiply(x,y)
+
+    assert a == tnp.array([0, -6, -1], dtype='int64')
