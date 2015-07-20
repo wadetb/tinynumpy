@@ -44,7 +44,7 @@ import sys
 import ctypes
 
 from math import sqrt
-import itertools as itr
+from builtins import map
 import operator
 import tinylinalg as linalg
 from tinylinalg import LinAlgError as LinAlgError
@@ -430,7 +430,7 @@ def dot(u, v):
     # http://reference.wolfram.com/language/ref/Dot.html
     if uDim == vDim == 3:
         try:
-            u_dot_v = sum(itr.imap(operator.mul, u, v))
+            u_dot_v = sum(map(operator.mul, u, v))
         except LinAlgError as e:
             u_dot_v = e
     else:
