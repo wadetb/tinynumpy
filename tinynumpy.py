@@ -731,7 +731,7 @@ class ndarray(object):
             return s
 
         s = _repr_r('', 0, self._offset)
-        if self.dtype != 'float64':
+        if self.dtype != 'float64' and self.dtype != 'int32':
             return "array(" + s + ", dtype='%s')" % self.dtype
         else:
             return "array(" + s + ")"
