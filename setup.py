@@ -18,22 +18,22 @@ with open(path.join(here, 'DESCRIPTION.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
 setup(
-    name='sample',
+    name='tinynumpy',
 
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version='1.2.0',
+    version='1.2.0.dev1',
 
-    description='A sample Python project',
+    description='A lightweight, pure Python, numpy compliant ndarray class',
     long_description=long_description,
 
     # The project's main homepage.
-    url='https://github.com/pypa/sampleproject',
+    url='https://github.com/wadetb/tinynumpy',
 
     # Author details
-    author='The Python Packaging Authority',
-    author_email='pypa-dev@googlegroups.com',
+    author='Wade Brainerd',
+    author_email='wadetb@gmail.com',
 
     # Choose your license
     license='MIT',
@@ -65,7 +65,7 @@ setup(
     ],
 
     # What does your project relate to?
-    keywords='sample setuptools development',
+    keywords='Science/Research Scientific/Engineering Software Development',
 
     # You can just specify the packages manually here if your project is
     # simple. Or you can use find_packages().
