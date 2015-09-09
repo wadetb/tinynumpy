@@ -54,7 +54,7 @@ def test_shapes_and_strides():
 
 def test_repr():
     
-    for dtype in ['float32', 'int32']:
+    for dtype in ['float32', 'float64', 'int32', 'int64']:
         for data in [[1, 2, 3, 4, 5, 6, 7, 8],
                     [[1, 2], [3, 4], [5, 6], [7, 8]],
                     [[[1, 2], [3, 4]],[[5, 6], [7, 8]]],
@@ -90,13 +90,14 @@ def test_dtype():
 
 def test_reshape():
     
-    a = np.array([1, 2, 3, 4, 5, 6, 7, 8])
-    b = tnp.array([1, 2, 3, 4, 5, 6, 7, 8])
+    a = np.array([1, 2, 3, 4, 5, 6, 7, 8], dtype='int32')
+    b = tnp.array([1, 2, 3, 4, 5, 6, 7, 8], dtype='int32')
     
     for shape in [(2, 4), (4, 2), (2, 2, 2), (8,)]:
         a.shape = shape
         b.shape = shape
         assert a.shape == b.shape
+        print(repr(a), repr(b), a.strides, b.strides)
         assert a.strides == b.strides
     
     a.shape = 2, 4
@@ -237,44 +238,6 @@ def test_getitem():
      
     a = np.array([[1, 2, 3, 4], [5, 6, 7, 8]])
     b = tnp.array([[1, 2, 3, 4], [5, 6, 7, 8]])
-
-
-if __name__ == '__main__':
-    
-    # Run tests with or without pytest. Running with pytest creates
-    # coverage report, running without allows PM debugging to fix bugs.
-    if False:
-        del sys.modules['tinynumpy']  # or coverage wont count globals
-        pytest.main('-v -x --color=yes --cov tinynumpy --cov-config .coveragerc '
-                    '--cov-report html %s' % repr(__file__))
-        # Run these lines to open coverage report
-        #import webbrowser
-        #webbrowser.open_new_tab(os.path.join('htmlcov', 'index.html'))
-    
-    else:
-        # Collect function names
-        test_functions = []
-        for line in open(__file__, 'rt').readlines():
-            if line.startswith('def'):
-                name = line[3:].split('(')[0].strip()
-                if name.startswith('test_'):
-                    test_functions.append(name)
-        # Report
-        print('Collected %i test functions.' % len(test_functions))
-        # Run
-        print('\nRunning tests ...\n')
-        for name in test_functions:
-            print('Running %s ... ' % name)
-            func = globals()[name]
-            try:
-                func()
-            except runner.Skipped as err:
-                print('SKIP:', err)
-            except Exception:
-                print('FAIL')
-                raise
-            else:
-                print('OK')
 
 
 # Start vector cross product tests
@@ -436,3 +399,41 @@ def test_multiply():
     a = tnp.multiply(x,y)
 
     assert a == tnp.array([0, -6, -1], dtype='int64')
+
+
+if __name__ == '__main__':
+    
+    # Run tests with or without pytest. Running with pytest creates
+    # coverage report, running without allows PM debugging to fix bugs.
+    if False:
+        del sys.modules['tinynumpy']  # or coverage wont count globals
+        pytest.main('-v -x --color=yes --cov tinynumpy --cov-config .coveragerc '
+                    '--cov-report html %s' % repr(__file__))
+        # Run these lines to open coverage report
+        #import webbrowser
+        #webbrowser.open_new_tab(os.path.join('htmlcov', 'index.html'))
+    
+    else:
+        # Collect function names
+        test_functions = []
+        for line in open(__file__, 'rt').readlines():
+            if line.startswith('def'):
+                name = line[3:].split('(')[0].strip()
+                if name.startswith('test_'):
+                    test_functions.append(name)
+        # Report
+        print('Collected %i test functions.' % len(test_functions))
+        # Run
+        print('\nRunning tests ...\n')
+        for name in test_functions:
+            print('Running %s ... ' % name)
+            func = globals()[name]
+            try:
+                func()
+            except runner.Skipped as err:
+                print('SKIP:', err)
+            except Exception:
+                print('FAIL')
+                raise
+            else:
+                print('OK')
