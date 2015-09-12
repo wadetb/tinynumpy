@@ -1,6 +1,8 @@
 # Added local files
 *.sublime-*
 .*
+setup-ex.py
+*.egg-info/*
 
 ========================
 # Folders in root folder
