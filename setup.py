@@ -3,7 +3,7 @@ setup(
   name = 'tinynumpy',
   packages = ['tinynumpy'], # this must be the same as the name above
   version = '1.2.0.dev1',
-  description = 'A random test lib',
+  description = 'A lightweight, pure Python, numpy compliant ndarray class',
   author = 'Wade Brainerd, Almar Klein',
   author_email = 'wadetb@gmail.com',
   url = 'https://github.com/wadetb/tinynumpy', # use the URL to the github repo
