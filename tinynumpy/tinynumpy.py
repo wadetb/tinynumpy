@@ -39,14 +39,16 @@ certain features may not be supported.
 # todo: Fortran order?
 
 from __future__ import division
+from __future__ import absolute_import
 
 import sys
 import ctypes
 
 from math import sqrt
 import operator
-import tinylinalg as linalg
-from tinylinalg import LinAlgError as LinAlgError
+
+import tinynumpy.tinylinalg as linalg
+from tinynumpy.tinylinalg import LinAlgError as LinAlgError
 
 # Python 2/3 compat
 if sys.version_info >= (3, ):

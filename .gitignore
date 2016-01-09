@@ -3,6 +3,9 @@
 .*
 setup-ex.py
 *.egg-info/*
+*.tar
+*.gz
+*.tar.gz
 
 ========================
 # Folders in root folder

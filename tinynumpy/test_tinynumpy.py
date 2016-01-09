@@ -13,7 +13,7 @@ import pytest
 from _pytest import runner
 from pytest import raises, skip
 
-import tinynumpy as tnp
+import tinynumpy.tinynumpy as tnp
 
 # Numpy is optional. If not available, will compare against ourselves.
 try:
