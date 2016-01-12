@@ -1,6 +1,11 @@
-import tinynumpy.tinynumpy as tinynumpy
+
 import unittest
 import pytest
+
+try:
+    import tinynumpy.tinynumpy as tinynumpy
+except ImportError:
+    import tinynumpy as tinynumpy
 
 # Numpy is optional. If not available, will compare against ourselves.
 try:
