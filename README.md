@@ -11,7 +11,7 @@ platforms like Pypy and Jython.
 Links
 -----
 
-* Github: https://github.com/almarklein/tinynumpy
+* Github: https://github.com/wadetb/tinynumpy
 * Docs: http://tinynumpy.readthedocs.org/en/latest/
 
 
