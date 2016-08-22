@@ -245,7 +245,7 @@ def test_getitem():
 
 # Start vector cross product tests
 def test_cross():
-    """test the cross product of two 3 dimentional vectors"""
+    """test the cross product of two 3 dimensional vectors"""
 
     # Vector cross-product.
     x = [1, 2, 3]
@@ -256,20 +256,18 @@ def test_cross():
 
 
 def test_2dim_cross():
-    """test the cross product of two 2 dimentional vectors"""
+    """test the cross product of two 2 dimensional vectors"""
 
     # 2 dim cross-product.
     x = [1, 2]
     y = [4, 5]
+    z = tnp.cross(x, y)
 
-    with pytest.raises(IndexError) as execinfo:
-        z = tnp.cross(x, y)
-
-    assert 'Vector has invalid dimensions' in str(execinfo.value)
+    assert z == [-3]
 
 
 def test_4dim_cross():
-    """test the cross product of two 2 dimentional vectors"""
+    """test the cross product of two 2 dimensional vectors"""
 
     # 4 dim cross-product.
     x = [1, 2, 3, 4]
@@ -282,7 +280,7 @@ def test_4dim_cross():
 
 
 def test_mdim_cross():
-    """test the cross product of two 4 dimentional vectors"""
+    """test the cross product of two 4 dimensional vectors"""
 
     # Mixed dim cross-product.
     x = [1, 2, 3]
@@ -296,7 +294,7 @@ def test_mdim_cross():
 
 # Start vector dot product tests
 def test_dot():
-    """test the dot product of two mixed dimentional vectors"""
+    """test the dot product of two mixed dimensional vectors"""
 
     # Vector dot-product.
     x = [1, 2, 3]
@@ -307,33 +305,29 @@ def test_dot():
 
 
 def test_2dim_dot():
-    """test the dot product of two 2 dimentional vectors"""
+    """test the dot product of two 2 dimensional vectors"""
 
     # 2 dim dot-product.
     x = [1, 2]
     y = [4, 5]
+    z = tnp.dot(x, y)
 
-    with pytest.raises(IndexError) as execinfo:
-        z = tnp.dot(x, y)
-
-    assert 'Vector has invalid dimensions' in str(execinfo.value)
+    assert z == 14
 
 
 def test_4dim_dot():
-    """test the dot product of two 4 dimentional vectors"""
+    """test the dot product of two 4 dimensional vectors"""
 
     # 4 dim dot-product.
     x = [1, 2, 3, 4]
     y = [5, 6, 7, 8]
+    z = tnp.dot(x, y)
 
-    with pytest.raises(IndexError) as execinfo:
-        z = tnp.dot(x, y)
-
-    assert 'Vector has invalid dimensions' in str(execinfo.value)
+    assert z == 70
 
 
 def test_mdim_dot():
-    """test the dot product of two mixed dimentional vectors"""
+    """test the dot product of two mixed dimensional vectors"""
 
     # Mixed dim dot-product.
     x = [1, 2, 3]
@@ -347,7 +341,7 @@ def test_mdim_dot():
 
 # Start vector determinant tests
 def test_det():
-    """test calculation of the determinant of a three dimentional"""
+    """test calculation of the determinant of a three dimensional"""
 
     # Three dim determinant
     x = [5, -2, 1]
