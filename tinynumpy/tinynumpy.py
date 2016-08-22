@@ -399,7 +399,7 @@ def divide(ndarray_vec1, integer):
 
 def cross(u, v):
     """
-    Return the cross product of two 3 dimentional vectors.
+    Return the cross product of two 3 dimensional vectors.
     """
 
     uDim = len(u)
@@ -422,14 +422,14 @@ def cross(u, v):
 
 def dot(u, v):
     """
-    Return the dot product of two 3 dimentional vectors.
+    Return the dot product of two 3 dimensional vectors.
     """
 
     uDim = len(u)
     vDim = len(v)
 
     # http://reference.wolfram.com/language/ref/Dot.html
-    if uDim == vDim == 3:
+    if uDim == vDim:
         try:
             u_dot_v = sum(map(operator.mul, u, v))
         except LinAlgError as e:
