@@ -261,11 +261,9 @@ def test_2dim_cross():
     # 2 dim cross-product.
     x = [1, 2]
     y = [4, 5]
+    z = tnp.cross(x, y)
 
-    with pytest.raises(IndexError) as execinfo:
-        z = tnp.cross(x, y)
-
-    assert 'Vector has invalid dimensions' in str(execinfo.value)
+    assert z == [-3]
 
 
 def test_4dim_cross():
