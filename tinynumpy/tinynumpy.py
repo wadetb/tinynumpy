@@ -399,7 +399,7 @@ def divide(ndarray_vec1, integer):
 
 def cross(u, v):
     """
-    Return the cross product of two 3 dimensional vectors.
+    Return the cross product of two 2 or 3 dimensional vectors.
     """
 
     uDim = len(u)
@@ -428,7 +428,7 @@ def cross(u, v):
 
 def dot(u, v):
     """
-    Return the dot product of two 3 dimensional vectors.
+    Return the dot product of two equal-dimensional vectors.
     """
 
     uDim = len(u)
