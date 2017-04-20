@@ -45,20 +45,20 @@ Examples
 
 ```python
 
->>> import tinynumpy as tnp
+>>> from tinynumpy import tinynumpy as tnp
 
 >>> a = tnp.array([[1, 2, 3, 4],[5, 6, 7, 8]])
 
 >>> a
-array([[ 1.,  2.,  3.,  4.], 
+array([[ 1.,  2.,  3.,  4.],
     [ 5.,  6.,  7.,  8.]], dtype='float64')
 
 >>> a[:, 2:]
-array([[ 3.,  4.], 
+array([[ 3.,  4.],
     [ 7.,  8.]], dtype='float64')
 
 >>> a[:, ::2]
-array([[ 1.,  3.], 
+array([[ 1.,  3.],
     [ 5.,  7.]], dtype='float64')
 
 >>> a.shape
@@ -67,9 +67,9 @@ array([[ 1.,  3.],
 >>> a.shape = 4, 2
 
 >>> a
-array([[ 1.,  2.], 
-    [ 3.,  4.], 
-    [ 5.,  6.], 
+array([[ 1.,  2.],
+    [ 3.,  4.],
+    [ 5.,  6.],
     [ 7.,  8.]], dtype='float64')
 
 >>> b = a.ravel()
