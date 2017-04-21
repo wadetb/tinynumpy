@@ -33,10 +33,15 @@ certain features may not be supported.
 """
 
 # todo: keep track of readonly better
-# todo: mathematical operators
 # todo: more methods?
+#    where
+#    choose
+#    split
+#    roll
+#    inverse matrix
 # todo: logspace, meshgrid
 # todo: Fortran order?
+
 
 from __future__ import division
 from __future__ import absolute_import
@@ -72,6 +77,7 @@ _dtypes = [('B', 'b1', 'bool', ctypes.c_bool),
            ]
 
 # Inject common dtype names
+_bool = bool # preserve the builtin bool type with a new var name
 _known_dtypes = [d[2] for d in _dtypes]
 for d in _known_dtypes:
     globals()[d] = d
@@ -199,8 +205,7 @@ def _zerositer(n):
 
 
 
-## Public functions
-
+# Array constructors
 
 def array(obj, dtype=None, copy=True, order=None):
     """ array(obj, dtype=None, copy=True, order=None)
@@ -369,33 +374,132 @@ def linspace(start, stop, num=50, endpoint=True, retstep=False, dtype=None):
     else:
         return a
 
-def add(ndarray_vec1, ndarray_vec2):
-    c = []
-    for a, b in zip(ndarray_vec1, ndarray_vec2):
-        c.append(a+b)
-    cRay = array(c)
-    return cRay
 
-def subtract(ndarray_vec1, ndarray_vec2):
-    c = []
-    for a, b in zip(ndarray_vec1, ndarray_vec2):
-        c.append(a-b)
-    cRay = array(c)
-    return cRay
+# Array comparisons
 
-def multiply(ndarray_vec1, ndarray_vec2):
-    c = []
-    for a, b in zip(ndarray_vec1, ndarray_vec2):
-        c.append(a*b)
-    cRay = array(c)
-    return cRay
+def array_equal(a1, a2):
+    """
+    numpy.array_equal(a1, a2)
+    True if two arrays have the same shape and elements, False otherwise.
 
-def divide(ndarray_vec1, integer):
-    c = []
-    for a in ndarray_vec1:
-        c.append(a / integer)
-    cRay = array(c)
-    return cRay
+    Parameters:	
+        a1, a2 : array_like
+        Input arrays.
+        
+    Returns:	
+        b : bool
+        Returns True if the arrays are equal.
+    """
+    return a1.shape == a2.shape and (a1 == a2).all()
+
+def allclose(a, b, rtol=1e-05, atol=1e-08):
+    """
+    Returns True if two arrays are element-wise equal within a tolerance.
+
+    The tolerance values are positive, typically very small numbers. The relative difference (rtol * abs(b)) and the absolute difference atol are added together to compare against the absolute difference between a and b.
+
+    If either array contains one or more NaNs, False is returned. Infs are treated as equal if they are in the same place and of the same sign in both arrays.
+
+    Parameters:	
+    a, b : array_like
+        Input arrays to compare.
+    rtol : float
+        The relative tolerance parameter (see Notes).
+    atol : float
+        The absolute tolerance parameter (see Notes).
+
+    Returns:	
+        allclose : bool
+        Returns True if the two arrays are equal within the given tolerance; False otherwise.
+    """
+    assert a.shape == b.shape
+    # TODO: what about checking for NaNs which should return False?
+    #   And is the rtol correct with signs...?
+    # ...
+    valmin = -atol
+    valmax = atol
+    return all(valmin-rtol*bval < aval-bval < valmax+rtol*bval for aval,bval in zip(a, b))
+
+
+# Array retrieval
+
+def nonzero(a):
+    """
+    Return the indices of the elements that are non-zero.
+
+    Returns a tuple of arrays, one for each dimension of a, containing the indices of the non-zero elements in that dimension. 
+
+    Parameters:	
+    a : array_like
+    Input array.
+    Returns:	
+    tuple_of_arrays : tuple
+    Indices of elements that are non-zero.
+    """
+    if len(a.shape) == 1:
+        return array([i for i,val in enumerate(a) if val])
+    else:
+        # todo; higher dimensions
+        pass
+
+
+def where(condition, x=None, y=None):
+    """
+    Return elements, either from x or y, depending on condition.
+
+    If only condition is given, return condition.nonzero().
+
+    Parameters:	
+    condition : array_like, bool
+    When True, yield x, otherwise yield y.
+    x, y : array_like, optional
+    Values from which to choose. x and y need to have the same shape as condition.
+
+    Returns:	
+    out : ndarray or tuple of ndarrays
+    If both x and y are specified, the output array contains elements of x where condition is True, and elements from y elsewhere.
+    If only condition is given, return the tuple condition.nonzero(), the indices where condition is True.
+    """
+    if len(condition.shape) == 1:
+        if x and y:
+            out = self.copy()
+            out[:] = [xv if c else yv for (c,xv,yv) in zip(condition,x,y)]
+            return out
+        else:
+            return nonzero(condition)
+    else:
+        # todo; higher dimensions
+        pass
+
+
+# Array math
+
+def add(x1, x2):
+    assert x1.shape == x2.shape
+    out = x1.copy()
+    out[:] = [val + otherval for val,otherval in zip(x1.flat, x2.flat)]
+    return out
+
+def subtract(x1, x2):
+    assert x1.shape == x2.shape
+    out = x1.copy()
+    out[:] = [val - otherval for val,otherval in zip(x1.flat, x2.flat)]
+    return out
+
+def multiply(x1, x2):
+    assert x1.shape == x2.shape
+    out = x1.copy()
+    out[:] = [val * otherval for val,otherval in zip(x1.flat, x2.flat)]
+    return out
+
+def divide(x1, x2):
+    assert x1.shape == x2.shape
+    out = x1.copy()
+    out[:] = [val / otherval for val,otherval in zip(x1.flat, x2.flat)]
+    return out
+
+
+# Matrix math
 
 def cross(u, v):
     """
@@ -441,6 +545,7 @@ def dot(u, v):
     else:
         raise IndexError('Vector has invalid dimensions')
     return u_dot_v
+
 
 ## The class
 
@@ -633,8 +738,27 @@ class ndarray(object):
     
     def __len__(self):
         return self.shape[0]
+
+    def __iter__(self):
+        for item in self.data:
+            yield item
     
     def __getitem__(self, key):
+        # special rules for indexing with lists or ndarrays
+        if hasattr(key, "__iter__"):
+            # grab items based on positions of Trues in an equally long array
+            if isinstance(key[0], _bool):
+                assert len(key) == self.shape[0]
+                out = array([self.data[i] for i,keep in enumerate(key) if keep],
+                            dtype=self.dtype)
+                return out
+            # grab items based on array of index nrs
+            else:
+                out = array([self.data[i] for i in key],
+                            dtype=self.dtype)
+                return out
+            
+        # normal single item or slice indexing
         offset, shape, strides = self._index_helper(key)
         if not shape:
             # Return scalar
@@ -740,15 +864,159 @@ class ndarray(object):
             return "array(" + s + ", dtype='%s')" % self.dtype
         else:
             return "array(" + s + ")"
+
+    # Boolean comparisons
     
     def __eq__(self, other):
-        if other.__module__.split('.')[0] == 'numpy':
-            return other == self
-        else:
+        
+        if isinstance(other, (int,float)):
             out = empty(self.shape, 'bool')
-            out[:] = [i1==i2 for (i1, i2) in zip(self.flat, other.flat)]
+            out[:] = [val == other for val in self]
             return out
+        
+        elif hasattr(other, "__iter__"):
+            assert self.shape == other.shape
+            out = empty(self.shape, 'bool')
+            out[:] = [val == otherval for val,otherval in zip(self.flat, other.flat)]
+            return out
+
+    def __ne__(self, other):
+
+        if isinstance(other, (int,float)):
+            out = empty(self.shape, 'bool')
+            out[:] = [val != other for val in self]
+            return out
+
+        elif hasattr(other, "__iter__"):
+            assert self.shape == other.shape
+            out = empty(self.shape, 'bool')
+            out[:] = [val != otherval for val,otherval in zip(self.flat, other.flat)]
+            return out
+
+    def __gt__(self, other):
+
+        if isinstance(other, (int,float)):
+            out = empty(self.shape, 'bool')
+            out[:] = [val > other for val in self]
+            return out
+
+        elif hasattr(other, "__iter__"):
+            assert self.shape == other.shape
+            out = empty(self.shape, 'bool')
+            out[:] = [val > otherval for val,otherval in zip(self.flat, other.flat)]
+            return out
+        
+    def __ge__(self, other):
+        
+        if isinstance(other, (int,float)):
+            out = empty(self.shape, 'bool')
+            out[:] = [val >= other for val in self]
+            return out
+
+        elif hasattr(other, "__iter__"):
+            assert self.shape == other.shape
+            out = empty(self.shape, 'bool')
+            out[:] = [val >= otherval for val,otherval in zip(self.flat, other.flat)]
+            return out
+        
+    def __lt__(self, other):
+        
+        if isinstance(other, (int,float)):
+            out = empty(self.shape, 'bool')
+            out[:] = [val < other for val in self]
+            return out
+
+        elif hasattr(other, "__iter__"):
+            assert self.shape == other.shape
+            out = empty(self.shape, 'bool')
+            out[:] = [val < otherval for val,otherval in zip(self.flat, other.flat)]
+            return out
+        
+    def __le__(self, other):
+
+        if isinstance(other, (int,float)):
+            out = empty(self.shape, 'bool')
+            out[:] = [val <= other for val in self]
+            return out
+
+        elif hasattr(other, "__iter__"):
+            assert self.shape == other.shape
+            out = empty(self.shape, 'bool')
+            out[:] = [val <= otherval for val,otherval in zip(self.flat, other.flat)]
+            return out
+
+    ## Math operators
+
+    def __add__(self, other):
+
+        if isinstance(other, (int,float)):
+            out = self.copy()
+            out[:] = [val + other for val in self]
+            return out
+
+        elif hasattr(other, "__iter__"):
+            return add(self, other)
+
+    def __sub__(self, other):
+
+        if isinstance(other, (int,float)):
+            out = self.copy()
+            out[:] = [val - other for val in self]
+            return out
+
+        elif hasattr(other, "__iter__"):
+            return subtract(self, other)
+
+    def __mul__(self, other):
+
+        if isinstance(other, (int,float)):
+            out = self.copy()
+            out[:] = [val * other for val in self]
+            return out
+
+        elif hasattr(other, "__iter__"):
+            return multiply(self, other)
+        
+    def __truediv__(self, other):
+
+        if isinstance(other, (int,float)):
+            out = self.copy()
+            out[:] = [val / other for val in self]
+            return out
+
+        elif hasattr(other, "__iter__"):
+            return divide(self, other)
+
+    def __radd__(self, other):
+
+        # order makes no difference
+        return self.__add__(other)
+
+    def __rsub__(self, other):
+
+        if isinstance(other, (int,float)):
+            out = self.copy()
+            out[:] = [other - val for val in self]
+            return out
+
+        elif hasattr(other, "__iter__"):
+            return subtract(other, self)
+
+    def __rmul__(self, other):
+
+        # order makes no difference
+        return self.__mul__(other)
     
+    def __rtruediv__(self, other):
+
+        if isinstance(other, (int,float)):
+            out = self.copy()
+            out[:] = [other/val for val in self]
+            return out
+
+        elif hasattr(other, "__iter__"):
+            return divide(other, self)
+
     ## Private helper functions
     
     def _index_helper(self, key):
