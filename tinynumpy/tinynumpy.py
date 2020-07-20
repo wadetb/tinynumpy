@@ -773,7 +773,7 @@ class ndarray(object):
         '''
         if (isinstance(other, int) or isinstance(other, float)) :
             out = empty(self.shape, self.dtype)
-            out = [self._data+other for i in self._data] 
+            out[:] = [dat+other for dat in self._data] 
             return out
         if (isinstance(other, ndarray)):
             if self.shape == other.shape :
@@ -784,7 +784,7 @@ class ndarray(object):
     def __sub__(self, other):
         if (isinstance(other, int) or isinstance(other, float)) :
             out = empty(self.shape, self.dtype)
-            out = [dat-other for dat in self._data] 
+            out[:] = [dat-other for dat in self._data] 
             return out
         if (isinstance(other, ndarray)):
             if self.shape == other.shape :
@@ -796,7 +796,7 @@ class ndarray(object):
         '''multiply element-wise with array or float/scalar'''
         if (isinstance(other, int) or isinstance(other, float)) :
             out = empty(self.shape, self.dtype)
-            out = [dat*other for dat in self._data] 
+            out[:] = [dat*other for dat in self._data] 
             return out
         if (isinstance(other, ndarray)):
             if self.shape == other.shape :
@@ -809,7 +809,7 @@ class ndarray(object):
         if (isinstance(other, int) or isinstance(other, float)) :
             if other == 0 : raise ZeroDivisionError
             out = empty(self.shape, self.dtype)
-            out = [dat/other for dat in self._data] 
+            out[:] = [dat/other for dat in self._data] 
             return out
         if (isinstance(other, ndarray)):
             if self.shape == other.shape :
@@ -825,7 +825,7 @@ class ndarray(object):
         if (isinstance(other, int) or isinstance(other, float)) :
             if other == 0 : raise ZeroDivisionError
             out = empty(self.shape, self.dtype)
-            out = [dat/other for dat in self._data] 
+            out[:] = [dat/other for dat in self._data] 
             return out
         if (isinstance(other, ndarray)):
             if self.shape == other.shape :
@@ -841,7 +841,7 @@ class ndarray(object):
         if (isinstance(other, int) or isinstance(other, float)) :
             if other == 0 : raise ZeroDivisionError
             out = empty(self.shape, self.dtype)
-            out = [dat//other for dat in self._data] 
+            out[:] = [dat//other for dat in self._data] 
             return out
         if (isinstance(other, ndarray)):
             if self.shape == other.shape :
@@ -856,7 +856,7 @@ class ndarray(object):
         '''divide element-wise with array or float/scalar'''
         if (isinstance(other, int) or isinstance(other, float)) :
             out = empty(self.shape, self.dtype)
-            out = [dat%other for dat in self._data] 
+            out[:] = [dat%other for dat in self._data] 
             return out
         if (isinstance(other, ndarray)):
             if self.shape == other.shape :
@@ -871,7 +871,7 @@ class ndarray(object):
         '''power of two arrays element-wise (of just float power)'''
         if (isinstance(other, int) or isinstance(other, float)) :
             out = empty(self.shape, self.dtype)
-            out = [dat**other for dat in self._data] 
+            out[:] = [dat**other for dat in self._data] 
             return out
         if (isinstance(other, ndarray)):
             if self.shape == other.shape :
