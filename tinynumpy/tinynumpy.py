@@ -50,7 +50,7 @@ from collections.abc import Iterable
 import operator
 
 import tinynumpy.tinylinalg as linalg
-from   tinynumpy.tinylinalg import LinAlgError as LinAlgError
+from tinynumpy.tinylinalg import LinAlgError as LinAlgError
 
 # Python 2/3 compat
 if sys.version_info >= (3, ):
@@ -561,10 +561,9 @@ class ndarray(object):
         try : 
             assert isinstance(shape, Iterable)
             shape = tuple(shape)
-        except AssertionError:
+        except Exception as e:
             raise AssertionError('The shape must be tuple or list')
-        assert all([isinstance(x, int) for x in shape]),\
-                                            "dimension can only be integer"
+        assert all([isinstance(x, int) for x in shape])
         self._shape = shape
         # Check and set dtype
         dtype = _convert_dtype(dtype) if (dtype is not None) else 'float64'
@@ -573,7 +572,7 @@ class ndarray(object):
         self._dtype = dtype
         # Itemsize is directly derived from dtype
         self._itemsize = int(_convert_dtype(dtype, 'short')[-1])
-        # marker to check for divisions 
+        
         if buffer is None:
             # New array
             self._base = None
@@ -657,8 +656,8 @@ class ndarray(object):
             return self._data[offset]
         else:
             # Return view
-            return array(ndarray(shape, self.dtype,
-                            offset=offset, strides=strides, buffer=self))
+            return ndarray(shape, self.dtype,
+                           offset=offset, strides=strides, buffer=self)
     
     def __setitem__(self, key, value):
         
@@ -1467,4 +1466,3 @@ class nditer:
 
     def next(self):
         return self.__next__()
-
