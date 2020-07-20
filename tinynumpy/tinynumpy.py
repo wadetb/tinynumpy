@@ -773,7 +773,7 @@ class ndarray(object):
         '''
         if (isinstance(other, int) or isinstance(other, float)) :
             out = empty(self.shape, self.dtype)
-            out = [_data+other for i in self._data] 
+            out = [self._data+other for i in self._data] 
             return out
         if (isinstance(other, ndarray)):
             if self.shape == other.shape :
