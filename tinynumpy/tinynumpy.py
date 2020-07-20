@@ -45,6 +45,8 @@ import sys
 import ctypes
 
 from math import sqrt
+from copy import copy, deepcopy
+from collections.abc import Iterable
 import operator
 
 import tinynumpy.tinylinalg as linalg
@@ -78,6 +80,7 @@ for d in _known_dtypes:
 
 newaxis = None
 
+nan = float('nan')
 
 def _convert_dtype(dtype, to='numpy'):
     """ Convert dtype, if could not find, pass as it was.
@@ -442,6 +445,14 @@ def dot(u, v):
         raise IndexError('Vector has invalid dimensions')
     return u_dot_v
 
+def reshape(X,shape):
+    """
+    Returns the reshaped image of an ndarray
+    """
+    assert isinstance(X, ndarray)
+    assert isinstance(shape, tuple) or isinstance(shape, list)
+    return X.reshape(shape)
+
 ## The class
 
 class ndarray(object):
@@ -547,7 +558,11 @@ class ndarray(object):
         if order is not None:
             raise RuntimeError('ndarray order parameter is not supported')
         # Check and set shape
-        assert isinstance(shape, tuple)
+        try : 
+            assert isinstance(shape, Iterable)
+            shape = tuple(shape)
+        except Exception as e:
+            raise AssertionError('The shape must be tuple or list')
         assert all([isinstance(x, int) for x in shape])
         self._shape = shape
         # Check and set dtype
@@ -749,6 +764,274 @@ class ndarray(object):
             out[:] = [i1==i2 for (i1, i2) in zip(self.flat, other.flat)]
             return out
     
+
+    ###########################################################################
+    # Added some more basic functions to support in place and normal 
+    # mathematical operations like additions, substractions ... 
+    def __add__(self, other):
+        '''classic addition
+        '''
+        if (isinstance(other, int) or isinstance(other, float)) :
+            out = empty(self.shape, self.dtype)
+            out[:] = [dat+other for dat in self._data] 
+            return out
+        if (isinstance(other, ndarray)):
+            if self.shape == other.shape :
+                out = empty(self.shape, self.dtype)
+                out[:] = [i+j for (i,j) in zip(self.flat, other.flat)]
+                return out
+
+    def __sub__(self, other):
+        if (isinstance(other, int) or isinstance(other, float)) :
+            out = empty(self.shape, self.dtype)
+            out[:] = [dat-other for dat in self._data] 
+            return out
+        if (isinstance(other, ndarray)):
+            if self.shape == other.shape :
+                out = empty(self.shape, self.dtype)
+                out[:] = [i-j for (i,j) in zip(self.flat, other.flat)]
+                return out
+
+    def __mul__(self, other):
+        '''multiply element-wise with array or float/scalar'''
+        if (isinstance(other, int) or isinstance(other, float)) :
+            out = empty(self.shape, self.dtype)
+            out[:] = [dat*other for dat in self._data] 
+            return out
+        if (isinstance(other, ndarray)):
+            if self.shape == other.shape :
+                out = empty(self.shape, self.dtype)
+                out[:] = [i*j for (i,j) in zip(self.flat, other.flat)]
+                return out       
+
+    def __div__(self, other):
+        '''divide element-wise with array or float/scalar'''
+        if (isinstance(other, int) or isinstance(other, float)) :
+            if other == 0 : raise ZeroDivisionError
+            out = empty(self.shape, self.dtype)
+            out[:] = [dat/other for dat in self._data] 
+            return out
+        if (isinstance(other, ndarray)):
+            if self.shape == other.shape :
+                out = empty(self.shape, self.dtype)
+                out[:] = [i/j for (i,j) in zip(self.flat, other.flat)]
+                return out
+            else :
+                raise ValueError('Array sizes do not match. '+str(self.shape)\
+                                                  +' versus '+str(other.shape))
+
+    def __truediv__(self, other):
+        '''divide element-wise with array or float/scalar'''
+        if (isinstance(other, int) or isinstance(other, float)) :
+            if other == 0 : raise ZeroDivisionError
+            out = empty(self.shape, self.dtype)
+            out[:] = [dat/other for dat in self._data] 
+            return out
+        if (isinstance(other, ndarray)):
+            if self.shape == other.shape :
+                out = empty(self.shape, self.dtype)
+                out[:] = [i/j for (i,j) in zip(self.flat, other.flat)]
+                return out
+            else :
+                raise ValueError('Array sizes do not match. '+str(self.shape)\
+                                                  +' versus '+str(other.shape))
+
+    def __floordiv__(self, other):
+        '''divide element-wise with array or float/scalar'''
+        if (isinstance(other, int) or isinstance(other, float)) :
+            if other == 0 : raise ZeroDivisionError
+            out = empty(self.shape, self.dtype)
+            out[:] = [dat//other for dat in self._data] 
+            return out
+        if (isinstance(other, ndarray)):
+            if self.shape == other.shape :
+                out = empty(self.shape, self.dtype)
+                out[:] = [i//j for (i,j) in zip(self.flat, other.flat)]
+                return out
+            else :
+                raise ValueError('Array sizes do not match. '+str(self.shape)\
+                                                  +' versus '+str(other.shape))
+
+    def __mod__(self, other):
+        '''divide element-wise with array or float/scalar'''
+        if (isinstance(other, int) or isinstance(other, float)) :
+            out = empty(self.shape, self.dtype)
+            out[:] = [dat%other for dat in self._data] 
+            return out
+        if (isinstance(other, ndarray)):
+            if self.shape == other.shape :
+                out = empty(self.shape, self.dtype)
+                out[:] = [i%j for (i,j) in zip(self.flat, other.flat)]
+                return out
+            else :
+                raise ValueError('Array sizes do not match. '+str(self.shape)\
+                                                  +' versus '+str(other.shape))
+
+    def __pow__(self, other):
+        '''power of two arrays element-wise (of just float power)'''
+        if (isinstance(other, int) or isinstance(other, float)) :
+            out = empty(self.shape, self.dtype)
+            out[:] = [dat**other for dat in self._data] 
+            return out
+        if (isinstance(other, ndarray)):
+            if self.shape == other.shape :
+                out = empty(self.shape, self.dtype)
+                out[:] = [i**j for (i,j) in zip(self.flat, other.flat)]
+                return out
+            else :
+                raise ValueError('Array sizes do not match. '+str(self.shape)\
+                                                  +' versus '+str(other.shape))
+
+    def __iadd__(self, other):
+        '''Addition of other array or float in place with += operator
+        '''
+        if (isinstance(other, int) or isinstance(other, float)) :
+            for i in range(len(self._data)):
+                self._data[i]+=other
+            return self
+        if (isinstance(other, ndarray)):
+            if self.shape == other.shape :
+                for i in range(len(self._data)):
+                    self._data[i]+=other._data[i]
+                return self            
+            else :
+                raise ValueError('Array sizes do not match. '+str(self.shape)\
+                                                  +' versus '+str(other.shape))
+
+    def __isub__(self, other):
+        '''Addition of other array or float in place with += operator
+        '''
+        if (isinstance(other, int) or isinstance(other, float)) :
+            for i in range(len(self._data)):
+                self._data[i]-=other
+            return self
+        if (isinstance(other, ndarray)):
+            if self.shape == other.shape :
+                for i in range(len(self._data)):
+                    self._data[i]-=other._data[i]
+                return self
+            else :
+                raise ValueError('Array sizes do not match. '+str(self.shape)\
+                                                  +' versus '+str(other.shape))
+
+    def __imul__(self, other):
+        '''multiplication woth other array or float in place with *= operator
+        '''
+        if (isinstance(other, int) or isinstance(other, float)) :
+            for i in range(len(self._data)):
+                self._data[i]*=other
+            return self
+        if (isinstance(other, ndarray)):
+            if self.shape == other.shape :
+                for i in range(len(self._data)):
+                    self._data[i]*=other._data[i]
+                return self
+            else :
+                raise ValueError('Array sizes do not match. '+str(self.shape)\
+                                                  +' versus '+str(other.shape))
+
+    def __idiv__(self, other):
+        '''Division of other array or float in place with /= operator
+        '''
+        if (isinstance(other, int) or isinstance(other, float)) :
+            if other == 0 : raise ZeroDivisionError
+            for i in range(len(self._data)):
+                self._data[i]/=other
+            return self
+        if (isinstance(other, ndarray)):
+            if self.shape == other.shape :
+                for i in range(len(self._data)):
+                    self._data[i]/=other._data[i]
+                return self
+            else :
+                raise ValueError('Array sizes do not match. '+str(self.shape)\
+                                                  +' versus '+str(other.shape))
+
+    def __itruediv__(self, other):
+        '''Division of other array or float in place with /= operator
+        '''
+        if (isinstance(other, int) or isinstance(other, float)) :
+            if other == 0 : raise ZeroDivisionError
+            for i in range(len(self._data)):
+                self._data[i]/=other
+            return self
+        if (isinstance(other, ndarray)):
+            if self.shape == other.shape :
+                for i in range(len(self._data)):
+                    self._data[i]/=other._data[i]
+                return self
+            else :
+                raise ValueError('Array sizes do not match. '+str(self.shape)\
+                                                  +' versus '+str(other.shape))
+
+    def __ifloordiv__(self, other):
+        '''Division of other array or float in place with /= operator
+        '''
+        if (isinstance(other, int) or isinstance(other, float)) :
+            if other == 0 : raise ZeroDivisionError
+            for i in range(len(self._data)):
+                self._data[i]//=other
+            return self
+        if (isinstance(other, ndarray)):
+            if self.shape == other.shape :
+                for i in range(len(self._data)):
+                    self._data[i]//=other._data[i]
+                return self
+            else :
+                raise ValueError('Array sizes do not match. '+str(self.shape)\
+                                                  +' versus '+str(other.shape))
+
+    def __imod__(self, other):
+        '''mod of other array or float in place with /= operator
+        '''
+        if (isinstance(other, int) or isinstance(other, float)) :
+            if other == 0 : raise ZeroDivisionError
+            for i in range(len(self._data)):
+                self._data[i]%=other
+            return self
+        if (isinstance(other, ndarray)):
+            if self.shape == other.shape :
+                for i in range(len(self._data)):
+                    self._data[i]%=other._data[i]
+                return self
+            else :
+                raise ValueError('Array sizes do not match. '+str(self.shape)\
+                                                  +' versus '+str(other.shape))
+
+    def __imod__(self, other):
+        '''mod of other array or float in place with /= operator
+        '''
+        if (isinstance(other, int) or isinstance(other, float)) :
+            if other == 0 : raise ZeroDivisionError
+            for i in range(len(self._data)):
+                self._data[i]%=other
+            return self
+        if (isinstance(other, ndarray)):
+            if self.shape == other.shape :
+                for i in range(len(self._data)):
+                    self._data[i]%=other._data[i]
+                return self
+            else :
+                raise ValueError('Array sizes do not match. '+str(self.shape)\
+                                                  +' versus '+str(other.shape))
+
+    def __ipow__(self, other):
+        '''mod of other array or float in place with /= operator
+        '''
+        if (isinstance(other, int) or isinstance(other, float)) :
+            for i in range(len(self._data)):
+                self._data[i]**=other
+            return self
+        if (isinstance(other, ndarray)):
+            if self.shape == other.shape :
+                for i in range(len(self._data)):
+                    self._data[i]**=other._data[i]
+                return self
+            else :
+                raise ValueError('Array sizes do not match. '+str(self.shape)\
+                                                  +' versus '+str(other.shape))
+
+
     ## Private helper functions
     
     def _index_helper(self, key):
@@ -1132,6 +1415,31 @@ class ndarray(object):
 
     def std(self, axis=None):
         return sqrt(self.var(axis))
+
+    def argwhere(self, val):
+        #assumes that list has only values of same dtype
+
+        idx  = [i for i, e in enumerate(self.flat) if e == val]
+        keys = [list(_key_for_index(i, self.shape)) for i in idx]
+        return keys
+
+    def tolist(self):
+        '''
+        Returns the ndarray as a comprehensive list 
+        '''
+        shp    = list(self.shape).copy()
+        jump   = self.size//shp[-1]
+        n_comp = 0 #comprehension depth
+        comp   = list(self._data).copy()
+        while n_comp < len(self.shape)-1 :
+            comp = [comp[i*shp[-1]:i*shp[-1]+shp[-1]] for i in range(jump)]
+            shp.pop()
+            jump = len(comp)//shp[-1]
+            n_comp +=1
+        return comp
+
+
+
 
 class nditer:
     def __init__(self, array):
