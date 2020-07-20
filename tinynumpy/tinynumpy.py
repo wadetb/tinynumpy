@@ -808,7 +808,7 @@ class ndarray(object):
     def __div__(self, other):
         '''divide element-wise with array or float/scalar'''
         if (isinstance(other, int) or isinstance(other, float)) :
-            if other is 0 : raise ZeroDivisionError
+            if other == 0 : raise ZeroDivisionError
             out = empty(self.shape, self.dtype)
             out = [dat/other for dat in self._data] 
             return out
@@ -824,7 +824,7 @@ class ndarray(object):
     def __truediv__(self, other):
         '''divide element-wise with array or float/scalar'''
         if (isinstance(other, int) or isinstance(other, float)) :
-            if other is 0 : raise ZeroDivisionError
+            if other == 0 : raise ZeroDivisionError
             out = empty(self.shape, self.dtype)
             out = [dat/other for dat in self._data] 
             return out
@@ -840,7 +840,7 @@ class ndarray(object):
     def __floordiv__(self, other):
         '''divide element-wise with array or float/scalar'''
         if (isinstance(other, int) or isinstance(other, float)) :
-            if other is 0 : raise ZeroDivisionError
+            if other == 0 : raise ZeroDivisionError
             out = empty(self.shape, self.dtype)
             out = [dat//other for dat in self._data] 
             return out
@@ -935,7 +935,7 @@ class ndarray(object):
         '''Division of other array or float in place with /= operator
         '''
         if (isinstance(other, int) or isinstance(other, float)) :
-            if other is 0 : raise ZeroDivisionError
+            if other == 0 : raise ZeroDivisionError
             for i in range(len(self._data)):
                 self._data[i]/=other
             return self
@@ -952,7 +952,7 @@ class ndarray(object):
         '''Division of other array or float in place with /= operator
         '''
         if (isinstance(other, int) or isinstance(other, float)) :
-            if other is 0 : raise ZeroDivisionError
+            if other == 0 : raise ZeroDivisionError
             for i in range(len(self._data)):
                 self._data[i]/=other
             return self
@@ -969,7 +969,7 @@ class ndarray(object):
         '''Division of other array or float in place with /= operator
         '''
         if (isinstance(other, int) or isinstance(other, float)) :
-            if other is 0 : raise ZeroDivisionError
+            if other == 0 : raise ZeroDivisionError
             for i in range(len(self._data)):
                 self._data[i]//=other
             return self
@@ -986,7 +986,7 @@ class ndarray(object):
         '''mod of other array or float in place with /= operator
         '''
         if (isinstance(other, int) or isinstance(other, float)) :
-            if other is 0 : raise ZeroDivisionError
+            if other == 0 : raise ZeroDivisionError
             for i in range(len(self._data)):
                 self._data[i]%=other
             return self
@@ -1003,7 +1003,7 @@ class ndarray(object):
         '''mod of other array or float in place with /= operator
         '''
         if (isinstance(other, int) or isinstance(other, float)) :
-            if other is 0 : raise ZeroDivisionError
+            if other == 0 : raise ZeroDivisionError
             for i in range(len(self._data)):
                 self._data[i]%=other
             return self
