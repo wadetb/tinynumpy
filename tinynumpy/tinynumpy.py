@@ -46,7 +46,7 @@ import ctypes
 
 from math import sqrt
 from copy import copy, deepcopy
-from collections.abc import Iterable
+from collections import Iterable
 import operator
 
 import tinynumpy.tinylinalg as linalg
@@ -764,10 +764,6 @@ class ndarray(object):
             out[:] = [i1==i2 for (i1, i2) in zip(self.flat, other.flat)]
             return out
     
-
-    ###########################################################################
-    # Added some more basic functions to support in place and normal 
-    # mathematical operations like additions, substractions ... 
     def __add__(self, other):
         '''classic addition
         '''
@@ -781,6 +777,9 @@ class ndarray(object):
                 out[:] = [i+j for (i,j) in zip(self.flat, other.flat)]
                 return out
 
+    def __radd__(self, other):
+        return self.__add__(other)
+
     def __sub__(self, other):
         if (isinstance(other, int) or isinstance(other, float)) :
             out = empty(self.shape, self.dtype)
@@ -791,6 +790,9 @@ class ndarray(object):
                 out = empty(self.shape, self.dtype)
                 out[:] = [i-j for (i,j) in zip(self.flat, other.flat)]
                 return out
+
+    def __rsub__(self, other):
+        return self.__sub__(other)
 
     def __mul__(self, other):
         '''multiply element-wise with array or float/scalar'''
@@ -803,6 +805,9 @@ class ndarray(object):
                 out = empty(self.shape, self.dtype)
                 out[:] = [i*j for (i,j) in zip(self.flat, other.flat)]
                 return out       
+
+    def __rmul__(self, other):
+        return self.__mul__(other)
 
     def __div__(self, other):
         '''divide element-wise with array or float/scalar'''
